@@ -1,98 +1,49 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
+import { StyleSheet, View } from 'react-native';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { AppScreen } from '@/components/common/app-screen';
+import { FadeInView } from '@/components/common/motion';
+import { SectionHeader } from '@/components/common/section-header';
+import { AcademyUpdateCard } from '@/components/home/academy-update-card';
+import { CoachFeedbackCard } from '@/components/home/coach-feedback-card';
+import { FeeReminderCard } from '@/components/home/fee-reminder-card';
+import { LearningVideoCard } from '@/components/home/learning-video-card';
+import { NextTrainingCard } from '@/components/home/next-training-card';
+import { PlayerHeader } from '@/components/home/player-header';
+import { ProgressSummaryCard } from '@/components/home/progress-summary-card';
+import { ContentState } from '@/components/states/content-state';
+import { useLearning } from '@/contexts/learning-context';
+import { homeDashboardMock } from '@/data/home';
+import { latestAssessmentId } from '@/data/progress-details';
+import { layout } from '@/design/tokens';
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const router = useRouter();
+  const dashboard = homeDashboardMock;
+  const { lessons, getProgress } = useLearning();
+  const dashboardLesson = dashboard.continueLearning
+    ? lessons.find((lesson) => lesson.id === dashboard.continueLearning?.id)
+    : undefined;
+  const dashboardLessonProgress = dashboardLesson ? getProgress(dashboardLesson) : undefined;
+  const continueLearning = dashboard.continueLearning && dashboardLessonProgress?.status !== 'completed'
+    ? { ...dashboard.continueLearning, watchedMinutes: dashboardLessonProgress?.watchedMinutes ?? dashboard.continueLearning.watchedMinutes }
+    : null;
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  return (
+    <AppScreen>
+      <View>
+        <FadeInView translate={false}><PlayerHeader player={dashboard.player} onNotificationPress={() => router.push('/(tabs)/updates')} /></FadeInView>
+        <View style={styles.sections}>
+          <FadeInView delay={40}>{dashboard.nextTraining ? <NextTrainingCard training={dashboard.nextTraining} onPress={() => router.push('/training/schedule')} /> : <ContentState type="empty" title="No upcoming training" message="Your next scheduled session will appear here." />}</FadeInView>
+          <FadeInView delay={80}><View><SectionHeader title="Your Progress" actionLabel="View full progress" actionTestID="home-view-progress" onAction={() => router.push('/(tabs)/progress')} /><ProgressSummaryCard progress={dashboard.progress} /></View></FadeInView>
+          {dashboard.latestFeedback ? <View><SectionHeader title="Latest Coach Feedback" /><CoachFeedbackCard feedback={dashboard.latestFeedback} onPress={() => router.push({ pathname: '/progress/assessment/[assessmentId]', params: { assessmentId: latestAssessmentId } })} /></View> : null}
+          {continueLearning ? <View><SectionHeader title="Continue Learning" actionLabel="Browse library" onAction={() => router.push('/(tabs)/learn')} /><LearningVideoCard video={continueLearning} onPress={() => router.push({ pathname: '/learn/[lessonId]', params: { lessonId: continueLearning.id } })} /></View> : null}
+          {dashboard.feeReminder ? <FeeReminderCard fee={dashboard.feeReminder} onPress={() => router.push('/profile/fees')} /> : null}
+          {dashboard.latestUpdate ? <View><SectionHeader title="Latest Academy Update" actionLabel="See all" onAction={() => router.push('/(tabs)/updates')} /><AcademyUpdateCard update={dashboard.latestUpdate} onPress={() => router.push({ pathname: '/updates/[updateId]', params: { updateId: dashboard.latestUpdate?.id ?? 'weekend-training-time-updated' } })} /></View> : null}
+        </View>
+      </View>
+    </AppScreen>
   );
 }
 
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
+const styles = StyleSheet.create({ sections: { gap: layout.sectionGap } });
