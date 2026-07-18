@@ -12,18 +12,39 @@ interface UpdatesContextValue {
   markRead: (updateId: string) => void;
   markAllRead: () => void;
   resetReadState: () => void;
+  syncAssessmentUpdates: (updates: readonly AcademyCommunicationUpdate[]) => void;
+  syncTrainingUpdates: (updates: readonly AcademyCommunicationUpdate[]) => void;
+  syncOperationUpdates: (updates: readonly AcademyCommunicationUpdate[]) => void;
   retry: () => void;
 }
 
 const initialState: UpdatesState = { updates: [], readIds: new Set<string>(), status: 'loading' };
+const assessmentUpdatePrefix = 'coach-assessment-update-';
+const trainingUpdatePrefix = 'coach-training-update-';
+const operationUpdatePrefix = 'coach-operation-update-';
 
 function updatesReducer(state: UpdatesState, action: UpdatesAction): UpdatesState {
   switch (action.type) {
     case 'loading': return { ...state, status: 'loading' };
     case 'load-error': return { ...state, status: 'error' };
-    case 'load-success': return { updates: action.updates, status: 'ready', readIds: new Set([...state.readIds, ...action.updates.filter((item) => item.initiallyRead).map((item) => item.id)]) };
+    case 'load-success': {
+      const domainUpdates = state.updates.filter((item) => item.id.startsWith(assessmentUpdatePrefix) || item.id.startsWith(trainingUpdatePrefix) || item.id.startsWith(operationUpdatePrefix));
+      return { updates: [...domainUpdates, ...action.updates], status: 'ready', readIds: new Set([...state.readIds, ...action.updates.filter((item) => item.initiallyRead).map((item) => item.id)]) };
+    }
     case 'mark-read': return state.readIds.has(action.updateId) ? state : { ...state, readIds: new Set([...state.readIds, action.updateId]) };
     case 'mark-all-read': return { ...state, readIds: new Set(state.updates.map((item) => item.id)) };
+    case 'sync-assessment-updates': {
+      const academyUpdates = state.updates.filter((item) => !item.id.startsWith(assessmentUpdatePrefix));
+      return { ...state, updates: [...action.updates, ...academyUpdates] };
+    }
+    case 'sync-training-updates': {
+      const otherUpdates = state.updates.filter((item) => !item.id.startsWith(trainingUpdatePrefix));
+      return { ...state, updates: [...action.updates, ...otherUpdates] };
+    }
+    case 'sync-operation-updates': {
+      const otherUpdates = state.updates.filter((item) => !item.id.startsWith(operationUpdatePrefix));
+      return { ...state, updates: [...action.updates, ...otherUpdates] };
+    }
     case 'replace-read-state': return { ...state, readIds: action.readIds };
   }
 }
@@ -38,7 +59,7 @@ async function loadUpdates(dispatch: Dispatch<UpdatesAction>) {
     const [updates, storedIds] = await Promise.all([updatesService.getUpdates(), readStoredValue(storageKeys.updatesReadState, isReadIds)]);
     dispatch({ type: 'load-success', updates });
     const validIds = new Set(updates.map((update) => update.id));
-    storedIds?.filter((id) => validIds.has(id)).forEach((updateId) => dispatch({ type: 'mark-read', updateId }));
+    storedIds?.filter((id) => validIds.has(id) || id.startsWith(assessmentUpdatePrefix) || id.startsWith(trainingUpdatePrefix) || id.startsWith(operationUpdatePrefix)).forEach((updateId) => dispatch({ type: 'mark-read', updateId }));
   }
   catch { dispatch({ type: 'load-error' }); }
 }
@@ -64,9 +85,18 @@ export function UpdatesProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'replace-read-state', readIds: defaults });
     persistIds(defaults);
   }, [persistIds, state.updates]);
+  const syncAssessmentUpdates = useCallback((updates: readonly AcademyCommunicationUpdate[]) => {
+    dispatch({ type: 'sync-assessment-updates', updates });
+  }, []);
+  const syncTrainingUpdates = useCallback((updates: readonly AcademyCommunicationUpdate[]) => {
+    dispatch({ type: 'sync-training-updates', updates });
+  }, []);
+  const syncOperationUpdates = useCallback((updates: readonly AcademyCommunicationUpdate[]) => {
+    dispatch({ type: 'sync-operation-updates', updates });
+  }, []);
   const retry = useCallback(() => { void loadUpdates(dispatch); }, []);
   const unreadCount = state.updates.reduce((count, update) => count + (state.readIds.has(update.id) ? 0 : 1), 0);
-  const value = useMemo(() => ({ updates: state.updates, status: state.status, unreadCount, isRead, markRead, markAllRead, resetReadState, retry }), [isRead, markAllRead, markRead, resetReadState, retry, state.status, state.updates, unreadCount]);
+  const value = useMemo(() => ({ updates: state.updates, status: state.status, unreadCount, isRead, markRead, markAllRead, resetReadState, syncAssessmentUpdates, syncTrainingUpdates, syncOperationUpdates, retry }), [isRead, markAllRead, markRead, resetReadState, retry, state.status, state.updates, syncAssessmentUpdates, syncOperationUpdates, syncTrainingUpdates, unreadCount]);
   return <UpdatesContext.Provider value={value}>{children}</UpdatesContext.Provider>;
 }
 

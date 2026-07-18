@@ -2,7 +2,7 @@ import { Text, TextProps, TextStyle } from 'react-native';
 
 import { colors, fontFamilies, typography } from '@/design/tokens';
 
-type TextVariant = 'display' | 'title' | 'heading' | 'body' | 'bodySmall' | 'caption';
+type TextVariant = 'display' | 'title' | 'heading' | 'body' | 'bodySmall' | 'caption' | 'button';
 type TextWeight = 'regular' | 'medium' | 'semibold' | 'bold' | 'extraBold';
 
 interface AppTextProps extends TextProps {

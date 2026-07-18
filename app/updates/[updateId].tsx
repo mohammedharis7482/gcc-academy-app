@@ -37,11 +37,11 @@ function getUpdateAction(update: AcademyCommunicationUpdate, router: ReturnType<
     const feedbackId = update.targetId;
     return { label: update.actionLabel ?? 'View feedback', onPress: () => router.push({ pathname: '/progress/feedback/[feedbackId]', params: { feedbackId } }) };
   }
-  if (update.actionType === 'lesson' && update.targetId) {
-    const lessonId = update.targetId;
-    return { label: update.actionLabel ?? 'Open lesson', onPress: () => router.push({ pathname: '/learn/[lessonId]', params: { lessonId } }) };
+  if (update.actionType === 'session' && update.targetId) {
+    const sessionId = update.targetId;
+    return { label: update.actionLabel ?? 'Open Session', onPress: () => router.push({ pathname: '/sessions/[sessionId]', params: { sessionId } }) };
   }
-  if (update.actionType === 'fee-details') return { label: update.actionLabel ?? 'View fee details', onPress: () => router.push('/profile/fees') };
+  if (update.actionType === 'fee-details') return { label: update.actionLabel ?? 'View payment details', onPress: () => router.push('/profile/fees') };
   return undefined;
 }
 

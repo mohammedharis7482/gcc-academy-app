@@ -2,6 +2,7 @@ import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, 
 
 import { demoConfig } from '@/config/demo';
 import { defaultNotificationPreferences } from '@/data/profile';
+import { mockAuthService } from '@/services/mock-auth-service';
 import { profileService } from '@/services/profile-service';
 import { AppLanguage, MockSession, NotificationPreferenceKey, NotificationPreferences, PlayerProfile, SignInCredentials } from '@/types/profile';
 import { readStoredValue, removeStoredValue, storageKeys, writeStoredValue } from '@/utils/app-storage';
@@ -34,7 +35,7 @@ interface ProfileContextValue extends ProfileState {
   setLanguage: (language: AppLanguage) => void;
   resetSettings: () => void;
   retry: () => void;
-  signIn: (credentials: SignInCredentials) => Promise<boolean>;
+  signIn: (credentials: SignInCredentials) => Promise<MockSession | null>;
   logout: () => Promise<void>;
   readonly isAuthenticated: boolean;
 }
@@ -65,7 +66,21 @@ function profileReducer(state: ProfileState, action: ProfileAction): ProfileStat
 
 const ProfileContext = createContext<ProfileContextValue | undefined>(undefined);
 
-function isSession(value: unknown): value is MockSession { return typeof value === 'object' && value !== null && 'playerId' in value && 'signedInAt' in value && typeof value.playerId === 'string' && typeof value.signedInAt === 'string'; }
+interface LegacyPlayerSession { readonly playerId: string; readonly signedInAt: string }
+type StoredSession = MockSession | LegacyPlayerSession;
+
+function isStoredSession(value: unknown): value is StoredSession {
+  if (typeof value !== 'object' || value === null || !('signedInAt' in value) || typeof value.signedInAt !== 'string') return false;
+  if ('playerId' in value) return typeof value.playerId === 'string';
+  const validStringIds = (ids: unknown) => ids === undefined || (Array.isArray(ids) && ids.every((id) => typeof id === 'string'));
+  return 'schemaVersion' in value && value.schemaVersion === 2 && 'userId' in value && typeof value.userId === 'string' && 'role' in value && (value.role === 'player' || value.role === 'coach') && 'displayName' in value && typeof value.displayName === 'string' && 'academyId' in value && typeof value.academyId === 'string' && validStringIds('categoryIds' in value ? value.categoryIds : undefined) && validStringIds('assignedSquadIds' in value ? value.assignedSquadIds : undefined);
+}
+
+function migrateSession(session: StoredSession | null): MockSession | null {
+  if (!session) return null;
+  if (!('playerId' in session)) return session;
+  return { schemaVersion: 2, userId: session.playerId, role: 'player', displayName: demoConfig.player.name, academyId: 'gcc-chalissery', categoryIds: ['u13'], signedInAt: session.signedInAt };
+}
 function isPreferences(value: unknown): value is NotificationPreferences { return typeof value === 'object' && value !== null && ['trainingUpdates', 'progressFeedback', 'feeReminders', 'learningRecommendations', 'academyAnnouncements'].every((key) => key in value && typeof value[key as keyof typeof value] === 'boolean'); }
 function isLanguage(value: unknown): value is AppLanguage { return value === 'en'; }
 
@@ -79,12 +94,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   useEffect(() => { void loadProfile(); }, [loadProfile]);
   useEffect(() => {
     void Promise.all([
-      readStoredValue(storageKeys.authSession, isSession),
+      readStoredValue(storageKeys.authSession, isStoredSession),
       readStoredValue(storageKeys.notificationSettings, isPreferences),
       readStoredValue(storageKeys.language, isLanguage),
     ]).then(([session, preferences, language]) => {
       dispatch({ type: 'restore-settings', preferences: preferences ?? defaultNotificationPreferences, language: language ?? 'en' });
-      dispatch({ type: 'restore-session', session });
+      const migratedSession = migrateSession(session);
+      if (migratedSession && session && 'playerId' in session) void writeStoredValue(storageKeys.authSession, migratedSession);
+      dispatch({ type: 'restore-session', session: migratedSession });
     });
   }, []);
   const togglePreference = useCallback((key: NotificationPreferenceKey) => {
@@ -99,12 +116,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     void writeStoredValue(storageKeys.language, 'en');
   }, []);
   const signIn = useCallback(async (credentials: SignInCredentials) => {
-    await new Promise((resolve) => setTimeout(resolve, 450));
-    if (credentials.identifier.trim().toUpperCase() !== demoConfig.credentials.playerId || credentials.password !== demoConfig.credentials.password) return false;
-    const session: MockSession = { playerId: demoConfig.player.playerId, signedInAt: new Date().toISOString() };
+    const session = await mockAuthService.signIn(credentials);
+    if (!session) return null;
     await writeStoredValue(storageKeys.authSession, session);
     dispatch({ type: 'sign-in', session });
-    return true;
+    return session;
   }, []);
   const logout = useCallback(async () => { await removeStoredValue(storageKeys.authSession); dispatch({ type: 'logout' }); }, []);
   const isAuthenticated = state.session !== null;

@@ -9,10 +9,17 @@ import 'react-native-reanimated';
 
 import { AuthLoadingScreen } from '@/components/common/auth-loading-screen';
 import { OfflineBanner } from '@/components/common/offline-banner';
+import { RootErrorBoundary } from '@/components/common/root-error-boundary';
+import { ToastProvider } from '@/components/states/success-toast';
 import { colors } from '@/design/tokens';
+import { AcademyDataProvider } from '@/contexts/academy-data-context';
+import { AttendanceProvider } from '@/contexts/attendance-context';
+import { AssessmentProvider } from '@/contexts/assessment-context';
 import { LearningProvider } from '@/contexts/learning-context';
 import { ProfileProvider, useProfile } from '@/contexts/profile-context';
 import { UpdatesProvider } from '@/contexts/updates-context';
+import { TrainingPlanProvider } from '@/contexts/training-plan-context';
+import { AcademyOperationsProvider } from '@/contexts/academy-operations-context';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -22,13 +29,15 @@ export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({ Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold, Manrope_800ExtraBold });
   useEffect(() => { if (fontsLoaded || fontError) void SplashScreen.hideAsync(); }, [fontsLoaded, fontError]);
   if (!fontsLoaded && !fontError) return null;
-  return <ThemeProvider value={navigationTheme}><ProfileProvider><LearningProvider><UpdatesProvider><View style={styles.app}><OfflineBanner /><AppNavigator /></View></UpdatesProvider></LearningProvider></ProfileProvider><StatusBar style="dark" backgroundColor={colors.neutral.background} /></ThemeProvider>;
+  return <RootErrorBoundary><ThemeProvider value={navigationTheme}><ToastProvider><AcademyDataProvider><AttendanceProvider><ProfileProvider><LearningProvider><UpdatesProvider><AcademyOperationsProvider><AssessmentProvider><TrainingPlanProvider><View style={styles.app}><OfflineBanner /><AppNavigator /></View></TrainingPlanProvider></AssessmentProvider></AcademyOperationsProvider></UpdatesProvider></LearningProvider></ProfileProvider></AttendanceProvider></AcademyDataProvider><StatusBar style="dark" backgroundColor={colors.neutral.background} /></ToastProvider></ThemeProvider></RootErrorBoundary>;
 }
 
 function AppNavigator() {
-  const { isAuthenticated, isAuthLoading } = useProfile();
+  const { session, isAuthenticated, isAuthLoading } = useProfile();
   if (isAuthLoading) return <AuthLoadingScreen />;
-  return <Stack screenOptions={{ headerShown: false }}><Stack.Protected guard={isAuthenticated}><Stack.Screen name="(tabs)" /><Stack.Screen name="training/schedule" /><Stack.Screen name="progress/attendance" /><Stack.Screen name="progress/assessment/[assessmentId]" /><Stack.Screen name="progress/feedback/[feedbackId]" /><Stack.Screen name="learn/[lessonId]" /><Stack.Screen name="updates/[updateId]" /><Stack.Screen name="profile/fees" /><Stack.Screen name="profile/settings" /><Stack.Screen name="profile/notifications" /><Stack.Screen name="profile/support" /><Stack.Screen name="profile/about" /><Stack.Screen name="profile/privacy" /><Stack.Screen name="profile/terms" /></Stack.Protected><Stack.Protected guard={!isAuthenticated}><Stack.Screen name="(auth)" /></Stack.Protected></Stack>;
+  const isPlayer = session?.role === 'player';
+  const isCoach = session?.role === 'coach';
+  return <Stack screenOptions={{ headerShown: false }}><Stack.Protected guard={isPlayer}><Stack.Screen name="(tabs)" /><Stack.Screen name="training/schedule" /><Stack.Screen name="progress/attendance" /><Stack.Screen name="progress/assessment/[assessmentId]" /><Stack.Screen name="progress/feedback/[feedbackId]" /><Stack.Screen name="sessions/[sessionId]" /><Stack.Screen name="updates/[updateId]" /><Stack.Screen name="profile/fees" /><Stack.Screen name="profile/settings" /><Stack.Screen name="profile/notifications" /><Stack.Screen name="profile/support" /><Stack.Screen name="profile/about" /><Stack.Screen name="profile/privacy" /><Stack.Screen name="profile/terms" /></Stack.Protected><Stack.Protected guard={isCoach}><Stack.Screen name="(coach)" /></Stack.Protected><Stack.Protected guard={!isAuthenticated}><Stack.Screen name="(auth)" /></Stack.Protected></Stack>;
 }
 
 const styles = StyleSheet.create({ app: { flex: 1, backgroundColor: colors.neutral.background } });

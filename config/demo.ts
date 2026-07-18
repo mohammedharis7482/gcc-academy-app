@@ -1,9 +1,22 @@
 export const demoConfig = {
   storageVersion: 1,
   resetEnabled: __DEV__,
+  academy: {
+    primaryTrainingGround: 'GCC Football Ground',
+  },
+  timeline: {
+    currentDateIso: '2026-07-11',
+    currentDateLabel: 'Saturday, 11 July 2026',
+    currentDateShort: 'Saturday, 11 July',
+    currentSessionTime: '4:30 PM–6:00 PM',
+    currentSessionStart: '16:30',
+    currentSessionEnd: '18:00',
+    currentSessionCountdown: 'Starts in 3 hours',
+    latestAssessmentDate: '7 July 2026',
+  },
   credentials: {
-    playerId: 'GCC-U13-024',
-    password: 'demo123',
+    player: { id: 'GCC-U13-024', password: 'demo123' },
+    coach: { id: 'GCC-COACH-001', password: 'coach123' },
   },
   player: {
     name: 'Ayaan Mohammed',

@@ -1,50 +1,95 @@
-# Welcome to your Expo app 👋
+# GCC Football Academy Mobile App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+GCC Football Academy is an Expo/React Native mobile application for academy players, parents, and coaches. The current frontend MVP provides role-based experiences, persistent on-device demo state, and connected Player–Coach workflows without a backend.
 
-## Get started
+## Technology
 
-1. Install dependencies
+- Expo SDK 54 and Expo Router
+- React Native 0.81 and React 19
+- TypeScript with strict checking
+- AsyncStorage for local demo persistence
+- Manrope typography and shared GCC design tokens
+- Android preview builds through EAS
 
-   ```bash
-   npm install
-   ```
+## Local setup
 
-2. Start the app
+Prerequisites:
 
-   ```bash
-   npx expo start
-   ```
+- Node.js 20.19 or newer
+- npm
+- Expo Go, an Android emulator, or an EAS development/preview build
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+Install and run:
 
 ```bash
-npm run reset-project
+npm install
+npx expo start --clear
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Use the QR code with Expo Go or press `a` to open an available Android emulator.
 
-## Learn more
+Quality checks:
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+npx tsc --noEmit
+npm run lint
+npx expo-doctor
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Create the configured internal Android APK preview:
 
-## Join the community
+```bash
+eas build --profile preview --platform android
+```
 
-Join our community of developers creating universal apps.
+See [Android preview build notes](docs/android-preview-build.md) for the release checklist.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Demo accounts
+
+| Role | Account ID | Password |
+| --- | --- | --- |
+| Player/Parent | `GCC-U13-024` | `demo123` |
+| Coach | `GCC-COACH-001` | `coach123` |
+
+The accounts are frontend demo credentials only. Details and reset guidance are in [Demo credentials](docs/DEMO_CREDENTIALS.md).
+
+## Demo scenario
+
+The scripted client demonstration is centred on Ayaan Mohammed of the U13 Development Squad:
+
+- Jersey 10; head coach Sandeep
+- 94% attendance and 4.3/5 coach rating
+- Current goal: Weak-foot Passing
+- Current session: Saturday, 11 July 2026, 4:30 PM–6:00 PM
+- July fee: ₹1,200 pending, due 15 July 2026
+
+The Coach account has a primary U13 assignment and includes complete U10, U13, and U15 demo rosters so roster filtering can be reviewed.
+
+## Project structure
+
+```text
+app/          Expo Router routes and role groups
+components/   Shared, Player, and Coach UI components
+config/       Central demo and academy configuration
+contexts/     Persistent frontend state providers
+data/         Typed academy demo datasets and selectors
+design/       GCC design and motion tokens
+services/     Local persistence and mock service adapters
+types/        Shared TypeScript models
+docs/         QA, architecture, build, and client documents
+```
+
+The root layout owns role protection and shared providers. Player tabs live in `app/(tabs)`, Coach tabs live in `app/(coach)/(tabs)`, and supporting pages are stack routes so they do not appear in the bottom navigation.
+
+## Documentation
+
+- [Feature inventory](FEATURES.md)
+- [User flows](USER_FLOWS.md)
+- [Known limitations](KNOWN_LIMITATIONS.md)
+- [Changelog](CHANGELOG.md)
+- [Client feedback checklist](docs/CLIENT_FEEDBACK_CHECKLIST.md)
+- [Role architecture](docs/app-role-architecture.md)
+
+## Data and privacy
+
+All player, attendance, assessment, fee, and update records in this build are demonstration data stored locally on the test device. Do not enter real sensitive player or guardian information. Support contact details are centralized in `config/academy.ts`; legal screens remain clearly labelled drafts until approved policies are supplied.

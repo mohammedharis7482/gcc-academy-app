@@ -5,8 +5,8 @@ export const motion = {
     instant: 110,
     press: 160,
     fast: 200,
-    standard: 260,
-    slow: 320,
+    standard: 220,
+    skeleton: 1200,
   },
   scale: {
     pressSmall: 0.985,

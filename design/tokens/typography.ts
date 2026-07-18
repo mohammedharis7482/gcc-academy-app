@@ -13,4 +13,7 @@ export const typography = {
   body: { fontSize: 14, lineHeight: 22 },
   bodySmall: { fontSize: 13, lineHeight: 19 },
   caption: { fontSize: 11, lineHeight: 16 },
+  button: { fontSize: 13, lineHeight: 18 },
+  tabLabel: { fontSize: 11, lineHeight: 16 },
+  badge: { fontSize: 10, lineHeight: 14 },
 } as const;

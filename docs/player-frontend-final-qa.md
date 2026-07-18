@@ -18,14 +18,14 @@ Release target: Android internal preview APK
 - [x] Sign In: `/(auth)/sign-in` → public pathname `/sign-in`
 - [x] Home: `/(tabs)` → `/`
 - [x] Progress: `/(tabs)/progress` → `/progress`
-- [x] Learn: `/(tabs)/learn` → `/learn`
+- [x] Sessions: `/(tabs)/sessions` → `/sessions`
 - [x] Updates: `/(tabs)/updates` → `/updates`
 - [x] Profile: `/(tabs)/profile` → `/profile`
 - [x] Training Schedule: `/training/schedule`
 - [x] Attendance Detail: `/progress/attendance`
 - [x] Assessment Detail: `/progress/assessment/[assessmentId]`
 - [x] Feedback Detail: `/progress/feedback/[feedbackId]`
-- [x] Lesson Detail: `/learn/[lessonId]`
+- [x] Session Detail: `/sessions/[sessionId]`
 - [x] Update Detail: `/updates/[updateId]`
 - [x] Fee Details: `/profile/fees`
 - [x] Notification Settings: `/profile/notifications`
@@ -34,13 +34,13 @@ Release target: Android internal preview APK
 - [x] About: `/profile/about`
 - [x] Privacy: `/profile/privacy`
 - [x] Terms: `/profile/terms`
-- [x] No duplicate Learn, Updates, Profile, auth, or dynamic routes
+- [x] No duplicate Sessions, Updates, Profile, auth, or dynamic routes
 - [x] Protected routes use the shared authenticated stack guard
 
 ## Tab-navigation checklist
 
 - [x] Five equal press zones remain mounted under one Tabs navigator
-- [x] Active Home, Progress, Learn, Updates, and Profile pills render icon plus label
+- [x] Active Home, Progress, Sessions, Updates, and Profile pills render icon plus label
 - [x] Inactive tabs render icons only
 - [x] Active state exposes `accessibilityState.selected` and `aria-selected`
 - [x] Updates badge uses the shared unread count and supports `9+`
@@ -51,27 +51,27 @@ Release target: Android internal preview APK
 
 ## Interaction checklist
 
-- [x] Home notification, schedule, progress, report, lesson, fee, and update actions
-- [x] Progress attendance, feedback, current-goal, and recommended-lesson actions
-- [x] Learn category selection, lesson navigation, related content, progress, and completion
+- [x] Home notification, schedule, progress, report, Session, fee, and update actions
+- [x] Progress attendance, feedback, current-goal, and recommended-Session actions
+- [x] Sessions category selection, Session navigation, related content, progress, and completion
 - [x] Updates filtering, detail navigation, contextual actions, and Mark All Read
 - [x] Profile fee, notifications, language, support, about, privacy, and terms routes
 - [x] Logout Cancel keeps the authenticated Profile route and session
 - [x] Logout Confirm clears authentication and shows Sign In
 - [x] Back after logout remains on the protected Sign In experience
-- [x] Invalid lesson, update, assessment, and feedback IDs show safe error content
-- [x] Learn has no exposed dead search control; local category filtering is the supported MVP discovery interaction
+- [x] Invalid Session, update, assessment, and feedback IDs show safe error content
+- [x] Sessions has no exposed dead search control; local category filtering is the supported MVP discovery interaction
 
 ## Persistence checklist
 
 - [x] Authentication session restores after reload
-- [x] Lesson watched/completed state restores after reload
-- [x] Completed lessons remain complete and leave unfinished state
+- [x] Session watched/completed state restores after reload
+- [x] Completed Sessions remain complete and leave unfinished state
 - [x] Update read IDs and Mark All Read restore after reload
 - [x] Notification preferences restore after reload
 - [x] English language selection restores after reload
 - [x] Stored values use typed, versioned envelopes
-- [x] Malformed JSON, invalid schema versions, invalid lesson IDs, and invalid update IDs fail safely
+- [x] Malformed JSON, invalid schema versions, invalid Session IDs, and invalid update IDs fail safely
 - [x] Logout removes only the authentication session
 - [x] Development Reset Demo Data preserves authentication and resets frontend demo state
 
@@ -88,9 +88,9 @@ Release target: Android internal preview APK
 
 - [x] Branded auth-restoration loading state
 - [x] Invalid-credential feedback and disabled/busy Sign In behavior
-- [x] Home optional training, learning, fee, feedback, and update sections render safely
+- [x] Home optional training, Session development, fee, feedback, and update sections render safely
 - [x] Progress loading/empty-ready components and partial-data-safe cards
-- [x] Learn loading, no unfinished lesson, no category results, invalid lesson, and image/media fallback
+- [x] Sessions loading, no unfinished Session, no category results, invalid Session, and image/media fallback
 - [x] Updates loading, no unread, no category results, and invalid update
 - [x] Profile loading, missing profile, no pending fee, and no fee-history states
 - [x] Detail records expose error and back/retry actions instead of blank screens
@@ -114,7 +114,7 @@ Release target: Android internal preview APK
 - [x] Main tabs tested at 440 × 956
 - [x] Supporting routes rendered at 360 px without horizontal overflow
 - [x] Tab pills and labels remain on one line
-- [x] Lesson and update metadata wrap safely
+- [x] Session and update metadata wrap safely
 - [x] Profile information and settings rows remain readable
 - [x] Final content reserves tab-bar and safe-area clearance
 - [ ] OEM font scaling, gesture navigation, and three-button navigation — physical APK check required
@@ -124,7 +124,7 @@ Release target: Android internal preview APK
 - [x] Root providers mount once above navigation
 - [x] Context actions and values use targeted callback/memo patterns
 - [x] Lists use stable data IDs
-- [x] Current Learn, Updates, attendance, fee, and feedback datasets are short; no unnecessary virtualized-list complexity was introduced
+- [x] Current Sessions, Updates, attendance, fee, and feedback datasets are short; no unnecessary virtualized-list complexity was introduced
 - [x] Horizontal chip/carousel ScrollViews are bounded and do not nest vertical scrolling
 - [x] Images use stable aspect ratios, Expo Image, and fallback behavior
 - [x] Shared motion durations, press scales, entry offset, opacity, and easing are centralized
@@ -139,19 +139,19 @@ Release target: Android internal preview APK
 
 ## Motion and scrolling checklist
 
-- [x] Primary buttons, icon buttons, section actions, lesson cards, update rows, fee/update cards, Profile rows, and key Progress actions use consistent press feedback
+- [x] Primary buttons, icon buttons, section actions, Session cards, update rows, fee/update cards, Profile rows, and key Progress actions use consistent press feedback
 - [x] Press feedback duration is 160 ms with 0.985 or 0.97 scale intent
 - [x] Home limits entry motion to the header, hero, and Progress summary
 - [x] Progress limits entry motion to its score and chart surfaces
-- [x] Learn limits entry motion to Continue Watching and Recommended content
+- [x] Sessions limits entry motion to Continue Watching and Recommended content
 - [x] Updates limits entry motion to the important summary
 - [x] Profile limits entry motion to the player identity card
 - [x] Detail screens rely on native stack transitions rather than duplicate internal entrance effects
-- [x] No per-row entrance animation runs during Learn or Updates filtering
-- [x] Horizontal Learn/category scrollers remain bounded inside the vertical page scroller
+- [x] No per-row entrance animation runs during Sessions or Updates filtering
+- [x] Horizontal Sessions/category scrollers remain bounded inside the vertical page scroller
 - [x] Short demo datasets retain simple rendering to avoid unnecessary nested virtualized lists
 - [x] Stable record IDs are used throughout interactive lists
-- [ ] Home-to-bottom, chart, Learn carousel, Updates, Profile, and detail frame pacing on physical Android hardware
+- [ ] Home-to-bottom, chart, Sessions carousel, Updates, Profile, and detail frame pacing on physical Android hardware
 
 ## Motion accessibility checklist
 
@@ -185,9 +185,9 @@ Release target: Android internal preview APK
 ## Known limitations
 
 - Authentication and academy records are frontend mock data. The demo credential is necessarily present in the JavaScript bundle and is not production security.
-- Lesson playback is a thumbnail-based simulated progress experience.
+- Session playback is a thumbnail-based simulated progress experience.
 - Offline support provides local continuity, not queued synchronization.
-- Search is not exposed in the frozen Learn MVP; category filtering is available.
+- Search is not exposed in the frozen Sessions MVP; category filtering is available.
 - Malayalam, push delivery, backend persistence, online payments, receipt downloads, and production legal copy remain future work.
 - The package identifier and Expo project ownership must be confirmed by the academy/release owner.
 - Browser runtime checks cannot prove OEM-specific Android rendering, Back gestures, safe areas, or frame pacing.

@@ -2,11 +2,11 @@ import { AcademySupportContact } from '@/types/profile';
 import { demoConfig } from '@/config/demo';
 
 export const academySupportContact: AcademySupportContact = {
-  phone: '+91 98765 43210',
-  whatsapp: '+91 98765 43210',
-  email: 'support@gccacademy.example',
-  officeHours: 'Monday–Saturday, 9:00 AM–6:00 PM',
-  isDemo: true,
+  phone: '+91 95392 67730',
+  whatsapp: '+91 95392 67730',
+  email: 'info@gccacademy.in',
+  officeHours: 'By appointment — contact the academy first',
+  isDemo: false,
 };
 
 export const academyPaymentInstructions = [

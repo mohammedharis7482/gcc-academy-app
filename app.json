@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "GCC Football Academy",
-    "slug": "gcc-academy-app",
+    "slug": "gcc-football-academy",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -14,6 +14,11 @@
     },
     "android": {
       "versionCode": 1,
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.SYSTEM_ALERT_WINDOW"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#081D4D",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -53,6 +58,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "74eda49e-15b9-4a94-a450-03bc88c3b593"
+      }
     }
   }
 }

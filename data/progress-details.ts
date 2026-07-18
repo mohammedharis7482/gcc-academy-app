@@ -41,7 +41,7 @@ export const playerAssessments: readonly PlayerAssessment[] = [
 ];
 
 export const progressFeedbackDetails: readonly FeedbackDetail[] = [
-  { id: 'feedback-jul', date: '8 July 2026', coachName: 'Sandeep', coachRole: 'Technical Coach', message: 'Good improvement in first touch and passing. Continue practising with your weaker foot.', focus: 'Weak-foot passing', assessmentId: latestAssessmentId, recommendedLessonId: 'weak-foot-passing-drill' },
+  { id: 'feedback-jul', date: demoConfig.timeline.latestAssessmentDate, coachName: 'Sandeep', coachRole: 'Technical Coach', message: 'Good improvement in first touch and passing. Continue practising with your weaker foot.', focus: 'Weak-foot passing', assessmentId: latestAssessmentId, recommendedLessonId: 'weak-foot-passing-drill' },
   { id: 'feedback-jun', date: '24 June 2026', coachName: 'Ramshad', coachRole: 'Technical Coach', message: 'Good energy in transition. Keep scanning before the ball arrives.', focus: 'Awareness before receiving', assessmentId: 'assessment-june-2026', recommendedLessonId: 'passing-under-pressure' },
   { id: 'feedback-jun-2', date: '10 June 2026', coachName: 'Sandeep', coachRole: 'Technical Coach', message: 'Strong improvement in close control during small-sided games.', focus: 'Protecting the ball', assessmentId: 'assessment-june-2026', recommendedLessonId: 'ball-control-basics' },
 ];
@@ -49,11 +49,11 @@ export const progressFeedbackDetails: readonly FeedbackDetail[] = [
 export const julyAttendance: AttendanceRecord = {
   month: 'July 2026', percentage: demoConfig.player.attendancePercent, presentCount: 15, absentCount: 1, lateCount: 1,
   sessions: [
-    { id: 'attendance-08-jul', date: '8 July 2026', time: '5:00 PM–6:30 PM', coachName: 'Sandeep', status: 'present' },
-    { id: 'attendance-05-jul', date: '5 July 2026', time: '4:30 PM–6:00 PM', coachName: 'Sandeep', status: 'late', note: 'Arrived 8 minutes late.' },
-    { id: 'attendance-03-jul', date: '3 July 2026', time: '5:00 PM–6:30 PM', coachName: 'Sandeep', status: 'present' },
-    { id: 'attendance-01-jul', date: '1 July 2026', time: '5:00 PM–6:30 PM', coachName: 'Ramshad', status: 'present' },
-    { id: 'attendance-28-jun', date: '28 June 2026', time: '4:30 PM–6:00 PM', coachName: 'Sandeep', status: 'absent', note: 'Guardian informed the academy.' },
+    { id: 'attendance-07-jul', date: '7 July 2026', time: '5:00 PM–6:30 PM', coachName: 'Sandeep', status: 'present' },
+    { id: 'attendance-04-jul', date: '4 July 2026', time: '4:30 PM–6:00 PM', coachName: 'Sandeep', status: 'late', note: 'Arrived 8 minutes late.' },
+    { id: 'attendance-02-jul', date: '2 July 2026', time: '5:00 PM–6:30 PM', coachName: 'Sandeep', status: 'present' },
+    { id: 'attendance-30-jun', date: '30 June 2026', time: '5:00 PM–6:30 PM', coachName: 'Ramshad', status: 'present' },
+    { id: 'attendance-27-jun', date: '27 June 2026', time: '4:30 PM–6:00 PM', coachName: 'Sandeep', status: 'absent', note: 'Guardian informed the academy.' },
   ],
 };
 

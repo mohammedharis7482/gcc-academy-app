@@ -5,45 +5,40 @@ import { AppScreen } from '@/components/common/app-screen';
 import { FadeInView } from '@/components/common/motion';
 import { SectionHeader } from '@/components/common/section-header';
 import { AcademyUpdateCard } from '@/components/home/academy-update-card';
+import { AttendanceHomeCard } from '@/components/home/attendance-home-card';
 import { CoachFeedbackCard } from '@/components/home/coach-feedback-card';
 import { FeeReminderCard } from '@/components/home/fee-reminder-card';
 import { LearningVideoCard } from '@/components/home/learning-video-card';
 import { NextTrainingCard } from '@/components/home/next-training-card';
 import { PlayerHeader } from '@/components/home/player-header';
-import { ProgressSummaryCard } from '@/components/home/progress-summary-card';
 import { ContentState } from '@/components/states/content-state';
-import { useLearning } from '@/contexts/learning-context';
+import { InlineInfoBanner } from '@/components/states/inline-info-banner';
+import { HeroCardSkeleton, ListRowSkeleton, PageHeaderSkeleton, SummaryCardSkeleton } from '@/components/states/loading-skeletons';
+import { assessmentAverage } from '@/data/assessments';
+import { getLessonById, getSessionTopic } from '@/data/learning';
 import { homeDashboardMock } from '@/data/home';
 import { latestAssessmentId } from '@/data/progress-details';
+import { useAcademyOperations } from '@/contexts/academy-operations-context';
+import { useAssessments } from '@/contexts/assessment-context';
+import { useAttendanceData } from '@/contexts/attendance-context';
+import { useLearning } from '@/contexts/learning-context';
+import { useUpdates } from '@/contexts/updates-context';
 import { layout } from '@/design/tokens';
 
 export default function HomeScreen() {
-  const router = useRouter();
-  const dashboard = homeDashboardMock;
-  const { lessons, getProgress } = useLearning();
-  const dashboardLesson = dashboard.continueLearning
-    ? lessons.find((lesson) => lesson.id === dashboard.continueLearning?.id)
-    : undefined;
-  const dashboardLessonProgress = dashboardLesson ? getProgress(dashboardLesson) : undefined;
-  const continueLearning = dashboard.continueLearning && dashboardLessonProgress?.status !== 'completed'
-    ? { ...dashboard.continueLearning, watchedMinutes: dashboardLessonProgress?.watchedMinutes ?? dashboard.continueLearning.watchedMinutes }
-    : null;
-
-  return (
-    <AppScreen>
-      <View>
-        <FadeInView translate={false}><PlayerHeader player={dashboard.player} onNotificationPress={() => router.push('/(tabs)/updates')} /></FadeInView>
-        <View style={styles.sections}>
-          <FadeInView delay={40}>{dashboard.nextTraining ? <NextTrainingCard training={dashboard.nextTraining} onPress={() => router.push('/training/schedule')} /> : <ContentState type="empty" title="No upcoming training" message="Your next scheduled session will appear here." />}</FadeInView>
-          <FadeInView delay={80}><View><SectionHeader title="Your Progress" actionLabel="View full progress" actionTestID="home-view-progress" onAction={() => router.push('/(tabs)/progress')} /><ProgressSummaryCard progress={dashboard.progress} /></View></FadeInView>
-          {dashboard.latestFeedback ? <View><SectionHeader title="Latest Coach Feedback" /><CoachFeedbackCard feedback={dashboard.latestFeedback} onPress={() => router.push({ pathname: '/progress/assessment/[assessmentId]', params: { assessmentId: latestAssessmentId } })} /></View> : null}
-          {continueLearning ? <View><SectionHeader title="Continue Learning" actionLabel="Browse library" onAction={() => router.push('/(tabs)/learn')} /><LearningVideoCard video={continueLearning} onPress={() => router.push({ pathname: '/learn/[lessonId]', params: { lessonId: continueLearning.id } })} /></View> : null}
-          {dashboard.feeReminder ? <FeeReminderCard fee={dashboard.feeReminder} onPress={() => router.push('/profile/fees')} /> : null}
-          {dashboard.latestUpdate ? <View><SectionHeader title="Latest Academy Update" actionLabel="See all" onAction={() => router.push('/(tabs)/updates')} /><AcademyUpdateCard update={dashboard.latestUpdate} onPress={() => router.push({ pathname: '/updates/[updateId]', params: { updateId: dashboard.latestUpdate?.id ?? 'weekend-training-time-updated' } })} /></View> : null}
-        </View>
-      </View>
-    </AppScreen>
-  );
+  const router = useRouter(); const attendance = useAttendanceData(); const assessments = useAssessments(); const learning = useLearning(); const operations = useAcademyOperations(); const updates = useUpdates();
+  const attendanceSummary = attendance.getPlayerSummary('player-ayaan'); const latestAssessment = assessments.getLatestAssessment('player-ayaan'); const latestFull = assessments.getLatestFullAssessment('player-ayaan');
+  const categorySchedules = operations.getSchedulesForCategory('u13'); const schedule = categorySchedules.find((item) => item.source === 'coach-created' && item.status === 'upcoming') ?? categorySchedules.filter((item) => item.status === 'upcoming').sort((a, b) => a.date.localeCompare(b.date))[0];
+  const nextTraining = schedule ? { id: schedule.id, relativeDay: schedule.date === '2026-07-11' ? 'Today' : 'Next', date: schedule.dateLabel, time: schedule.time, venue: schedule.pitch, coachName: `Coach ${schedule.coachName}`, category: schedule.categoryName, countdown: 'Published schedule', focus: schedule.note, status: schedule.status } as const : null;
+  const assignments = operations.getAssignmentsForPlayer('player-ayaan', 'u13'); const latestAssignment = assignments[0]; const assignedSession = latestAssignment ? getLessonById(latestAssignment.sessionId) : undefined; const assignedProgress = assignedSession ? learning.getProgress(assignedSession) : undefined;
+  const assignedVideo = assignedSession && assignedProgress ? { id: assignedSession.id, title: assignedSession.title, type: getSessionTopic(assignedSession), coachName: latestAssignment.assignedByName, durationMinutes: assignedSession.durationMinutes, watchedMinutes: assignedProgress.watchedMinutes } : null;
+  const dynamicFeedback = latestAssessment ? { id: latestAssessment.id, coachName: 'Sandeep', coachRole: 'Technical Coach', date: new Date(latestAssessment.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }), text: latestAssessment.comment, focus: latestAssessment.improvementArea } : homeDashboardMock.latestFeedback;
+  const rating = latestFull ? assessmentAverage(latestFull) ?? homeDashboardMock.progress.coachRating : homeDashboardMock.progress.coachRating;
+  const latestUpdate = updates.updates[0] ? { id: updates.updates[0].id, title: updates.updates[0].title, summary: updates.updates[0].preview, publishedAt: updates.updates[0].relativeTime } : homeDashboardMock.latestUpdate;
+  const openPerformance = () => latestAssessment?.mode === 'quick-feedback' ? router.push({ pathname: '/progress/feedback/[feedbackId]', params: { feedbackId: latestAssessment.id } }) : router.push({ pathname: '/progress/assessment/[assessmentId]', params: { assessmentId: latestAssessment?.id ?? latestAssessmentId } });
+  const loading = attendance.loadStatus === 'loading' || assessments.status === 'loading' || learning.loadState === 'loading' || operations.status === 'loading' || updates.status === 'loading';
+  const partialError = attendance.loadStatus === 'error' || assessments.status === 'error' || operations.status === 'error' || updates.status === 'error';
+  if (loading) return <AppScreen><View style={styles.loading} accessibilityLabel="Loading player dashboard"><PageHeaderSkeleton /><HeroCardSkeleton /><SummaryCardSkeleton /><ListRowSkeleton avatar /></View></AppScreen>;
+  return <AppScreen><FadeInView translate={false}><PlayerHeader player={homeDashboardMock.player} onNotificationPress={() => router.push('/(tabs)/updates')} /></FadeInView><View style={styles.sections}>{partialError ? <InlineInfoBanner tone="warning" title="Some academy information could not be refreshed" message="Saved dashboard information remains available." /> : null}<FadeInView delay={40}>{nextTraining ? <NextTrainingCard training={nextTraining} onPress={() => router.push('/training/schedule')} /> : <ContentState type="empty" title="No upcoming training" message="A new schedule will appear when your Coach publishes it." />}</FadeInView>{attendanceSummary ? <View><SectionHeader title="Attendance Summary" actionLabel="View Attendance" onAction={() => router.push('/progress/attendance')} /><AttendanceHomeCard summary={attendanceSummary} onPress={() => router.push('/progress/attendance')} /></View> : null}{dynamicFeedback ? <View><SectionHeader title="Latest Performance" actionLabel="View Progress" onAction={() => router.push('/(tabs)/progress')} /><CoachFeedbackCard feedback={dynamicFeedback} rating={rating} onPress={openPerformance} /></View> : null}{assignedVideo ? <View><SectionHeader title="Assigned Session" actionLabel="All Sessions" onAction={() => router.push('/(tabs)/sessions')} /><LearningVideoCard video={assignedVideo} onPress={() => router.push({ pathname: '/sessions/[sessionId]', params: { sessionId: assignedVideo.id } })} /></View> : <ContentState type="empty" title="No assigned sessions yet" message="Your Coach's assigned Academy Sessions will appear here." />}{latestUpdate ? <View><SectionHeader title="Latest Update" actionLabel="View All Updates" onAction={() => router.push('/(tabs)/updates')} /><AcademyUpdateCard update={latestUpdate} onPress={() => router.push({ pathname: '/updates/[updateId]', params: { updateId: latestUpdate.id } })} /></View> : <ContentState type="empty" title="No announcements yet" message="Academy and Coach updates will appear here." />}{homeDashboardMock.feeReminder ? <View><SectionHeader title="Payment Status" actionLabel="View Payments" onAction={() => router.push('/profile/fees')} /><FeeReminderCard fee={homeDashboardMock.feeReminder} onPress={() => router.push('/profile/fees')} /></View> : null}</View></AppScreen>;
 }
-
-const styles = StyleSheet.create({ sections: { gap: layout.sectionGap } });
+const styles = StyleSheet.create({ sections: { gap: layout.sectionGap }, loading: { gap: layout.cardGap } });

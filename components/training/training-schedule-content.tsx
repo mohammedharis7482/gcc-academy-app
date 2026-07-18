@@ -12,7 +12,7 @@ export function WeeklyScheduleCard({ slots }: { slots: readonly WeeklyTrainingSl
 }
 
 export function UpcomingSessionCard({ session }: { session: ScheduledTrainingSession }) {
-  const tone = session.status === 'upcoming' ? 'info' : 'warning';
+  const tone = session.status === 'upcoming' ? 'info' : session.status === 'completed' ? 'success' : session.status === 'cancelled' ? 'error' : 'warning';
   return <View style={styles.session}><View style={styles.sessionHeader}><View style={styles.copy}><AppText variant="heading" weight="extraBold">{session.date}</AppText><AppText variant="bodySmall" weight="bold" color={colors.brand.blue}>{session.time}</AppText></View><StatusBadge label={session.status} tone={tone} /></View><View style={styles.meta}><MaterialCommunityIcons name="map-marker-outline" size={18} color={colors.neutral.textSecondary} /><AppText variant="bodySmall" color={colors.neutral.textSecondary} style={styles.copy}>{session.ground}</AppText></View><View style={styles.meta}><MaterialCommunityIcons name="account-outline" size={18} color={colors.neutral.textSecondary} /><AppText variant="bodySmall" color={colors.neutral.textSecondary} style={styles.copy}>Coach {session.coachName}</AppText></View>{session.focus ? <View style={styles.focus}><MaterialCommunityIcons name="target" size={18} color={colors.brand.blue} /><AppText variant="bodySmall" weight="semibold" style={styles.copy}>{session.focus}</AppText></View> : null}</View>;
 }
 

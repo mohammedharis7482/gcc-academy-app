@@ -1,6 +1,7 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { AnimatedPressable } from '@/components/common/animated-pressable';
 import { AppText } from '@/components/common/app-text';
 import { StatusBadge } from '@/components/common/status-badge';
 import { colors, layout, radius, spacing } from '@/design/tokens';
@@ -20,8 +21,8 @@ export function MembershipCard({ membership }: { membership: PlayerMembership })
 }
 
 export function FeeSummaryCard({ fee, onPress }: { fee: FeeRecord | null; onPress: () => void }) {
-  if (!fee) return <SurfaceCard compactRows={false}><View style={styles.cardHeading}><View style={styles.successIcon}><MaterialCommunityIcons name="check" size={23} color={colors.status.success} /></View><View style={styles.grow}><AppText variant="heading" weight="extraBold">Fees up to date</AppText><AppText variant="bodySmall" color={colors.neutral.textSecondary}>There is no pending academy fee.</AppText></View></View><Pressable accessibilityRole="button" accessibilityLabel="View fee history" onPress={onPress} style={({ pressed }) => [styles.textAction, pressed && styles.pressed]}><AppText variant="bodySmall" weight="bold" color={colors.brand.blue}>View fee history</AppText></Pressable></SurfaceCard>;
-  return <Pressable testID="profile-fee-summary" accessibilityRole="button" accessibilityLabel={`${fee.period} academy fee, ${formatCurrency(fee.amount)}, ${fee.status}, due ${fee.dueDate}`} onPress={onPress} style={({ pressed }) => [styles.feeCard, pressed && styles.pressed]}><View style={styles.feeIcon}><MaterialCommunityIcons name="receipt-text-outline" size={24} color={colors.status.warning} /></View><View style={styles.grow}><AppText variant="bodySmall" weight="bold">{fee.period} Academy Fee</AppText><AppText variant="title" weight="extraBold">{formatCurrency(fee.amount)}</AppText><AppText variant="caption" weight="medium" color={colors.neutral.textSecondary}>Pending · Due {fee.dueDate}</AppText></View><View style={styles.arrow}><MaterialCommunityIcons name="arrow-right" size={19} color={colors.brand.navy} /></View></Pressable>;
+  if (!fee) return <SurfaceCard compactRows={false}><View style={styles.cardHeading}><View style={styles.successIcon}><MaterialCommunityIcons name="check" size={23} color={colors.status.success} /></View><View style={styles.grow}><AppText variant="heading" weight="extraBold">Payments up to date</AppText><AppText variant="bodySmall" color={colors.neutral.textSecondary}>There is no pending academy payment.</AppText></View></View><AnimatedPressable accessibilityRole="button" accessibilityLabel="View payment history" onPress={onPress} style={styles.textAction}><AppText variant="bodySmall" weight="bold" color={colors.brand.blue}>View payment history</AppText></AnimatedPressable></SurfaceCard>;
+  return <AnimatedPressable testID="profile-fee-summary" accessibilityRole="button" accessibilityLabel={`${fee.period} academy payment, ${formatCurrency(fee.amount)}, ${fee.status}, due ${fee.dueDate}`} onPress={onPress} style={styles.feeCard}><View style={styles.feeIcon}><MaterialCommunityIcons name="receipt-text-outline" size={24} color={colors.status.warning} /></View><View style={styles.grow}><AppText variant="bodySmall" weight="bold">{fee.period} Academy Payment</AppText><AppText variant="title" weight="extraBold">{formatCurrency(fee.amount)}</AppText><AppText variant="caption" weight="medium" color={colors.neutral.textSecondary}>Pending · Due {fee.dueDate}</AppText></View><View style={styles.arrow}><MaterialCommunityIcons name="arrow-right" size={19} color={colors.brand.navy} /></View></AnimatedPressable>;
 }
 
 export function GuardianInfoCard({ guardian }: { guardian: GuardianDetails }) {
@@ -41,5 +42,4 @@ const styles = StyleSheet.create({
   feeIcon: { width: layout.rowIconSize, height: layout.rowIconSize, borderRadius: radius.medium, backgroundColor: colors.brand.goldSoft, alignItems: 'center', justifyContent: 'center' },
   arrow: { width: layout.minTouchTarget, height: layout.minTouchTarget, borderRadius: radius.pill, backgroundColor: colors.neutral.white, alignItems: 'center', justifyContent: 'center' },
   textAction: { minHeight: layout.minTouchTarget, alignItems: 'flex-start', justifyContent: 'center' },
-  pressed: { opacity: 0.74, transform: [{ scale: 0.98 }] },
 });

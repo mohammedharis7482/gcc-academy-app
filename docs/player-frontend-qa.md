@@ -6,8 +6,8 @@
 - [ ] Demo credentials authenticate once without double submission
 - [ ] Session restores after process restart
 - [ ] Logout clears the stored session
-- [ ] Home, Progress, Learn, Updates, and Profile tabs open
-- [ ] Learn watched/completed state restores after restart
+- [ ] Home, Progress, Sessions, Updates, and Profile tabs open
+- [ ] Sessions watched/completed state restores after restart
 - [ ] Update read state and tab badge restore after restart
 - [ ] Notification preferences restore after restart
 - [ ] English remains selected; Malayalam is labelled Coming later
@@ -15,10 +15,10 @@
 
 ## Route checklist
 
-- [ ] `/`, `/progress`, `/learn`, `/updates`, `/profile`
+- [ ] `/`, `/progress`, `/sessions`, `/updates`, `/profile`
 - [ ] `/training/schedule`, `/progress/attendance`
 - [ ] Valid and invalid assessment/feedback routes
-- [ ] Valid and invalid lesson routes
+- [ ] Valid and invalid Session routes
 - [ ] Valid and invalid update routes
 - [ ] Fee, notifications, language, support, about, privacy, and terms
 - [ ] Protected deep links resolve to Sign In when logged out
@@ -39,7 +39,7 @@
 - [ ] Offline banner appears when connectivity is lost
 - [ ] Existing mock and locally persisted data remains readable offline
 - [ ] Loading, empty, error, retry, and not-found states never render blank pages
-- [ ] Failed lesson images load the fallback or expose Retry
+- [ ] Failed Session images load the fallback or expose Retry
 
 ## Accessibility checklist
 
@@ -62,11 +62,11 @@
 ## Known frontend limitations
 
 - Authentication and all academy records are mock data.
-- Lesson playback is a thumbnail-based simulated progress experience.
+- Session playback is a thumbnail-based simulated progress experience.
 - Offline support is local-read continuity, not queued synchronization.
 - Malayalam, online payment, receipt download, push delivery, and backend persistence require future platform work.
 - Reset Demo Data is development-only and does not appear in production builds.
 
 ## APK device pass
 
-Run the checklist on the target Samsung device using an APK/release candidate. Test a process kill, full relaunch, airplane mode, Android Back, keyboard resizing, notification switches, lesson completion, Mark All Read, logout, and protected deep links.
+Run the checklist on the target Samsung device using an APK/release candidate. Test a process kill, full relaunch, airplane mode, Android Back, keyboard resizing, notification switches, Session completion, Mark All Read, logout, and protected deep links.

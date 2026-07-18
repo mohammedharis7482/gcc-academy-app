@@ -8,7 +8,7 @@ This file documents the frontend MVP route contract. Dynamic IDs below must exis
 | --- | --- | --- |
 | Home | `/(tabs)` | Android root behavior |
 | Progress | `/(tabs)/progress` | Android root behavior |
-| Learn | `/(tabs)/learn` | Android root behavior |
+| Sessions | `/(tabs)/sessions` | Android root behavior |
 | Updates | `/(tabs)/updates` | Android root behavior; preserves provider state |
 | Profile | `/(tabs)/profile` | Android root behavior |
 
@@ -22,8 +22,8 @@ Only these five screens are tab items. All other routes are authenticated stack 
 | View training schedule | `/training/schedule` | none | source, fallback Home |
 | View full progress | `/(tabs)/progress` | none | tab history |
 | View report | `/progress/assessment/[assessmentId]` | `assessment-july-2026` | source, fallback Progress |
-| Browse library | `/(tabs)/learn` | none | tab history |
-| Continue lesson | `/learn/[lessonId]` | `ball-control-basics`; advances shared progress | source, fallback Learn |
+| Browse library | `/(tabs)/sessions` | none | tab history |
+| Continue Session | `/sessions/[sessionId]` | `ball-control-basics`; advances shared progress | source, fallback Sessions |
 | Fee reminder | `/profile/fees` | July 2026 fee | source, fallback Profile |
 | Latest academy update | `/updates/[updateId]` | `weekend-training-time-updated`; marks read | source, fallback Updates |
 
@@ -34,22 +34,22 @@ Only these five screens are tab items. All other routes are authenticated stack 
 | Attendance Summary | `/progress/attendance` | July 2026 | source, fallback Progress |
 | Skill rating row | `/progress/assessment/[assessmentId]` | `assessment-july-2026`, optional `skillId` highlight | source, fallback Progress |
 | Feedback timeline row | `/progress/feedback/[feedbackId]` | row feedback ID | source, fallback Progress |
-| Current Goal | `/learn/[lessonId]` | `weak-foot-passing-drill` | source, fallback Learn |
-| Learn Before Next Session | `/learn/[lessonId]` | `weak-foot-passing-drill` | source, fallback Learn |
+| Current Goal | `/sessions/[sessionId]` | `weak-foot-passing-drill` | source, fallback Sessions |
+| Sessions Before Next Session | `/sessions/[sessionId]` | `weak-foot-passing-drill` | source, fallback Sessions |
 
 Radar and development trend charts are intentionally visual-only.
 
-## Learn actions
+## Sessions actions
 
 | Action | Destination / state | Back |
 | --- | --- | --- |
-| Continue, recommended, latest, completed lesson | `/learn/[lessonId]` using the card lesson ID | source, fallback Learn |
-| Category chip | Filters the immutable lesson collection locally | stays on Learn |
+| Continue, recommended, latest, completed Session | `/sessions/[sessionId]` using the card Session ID | source, fallback Sessions |
+| Category chip | Filters the immutable Session collection locally | stays on Sessions |
 | Play / Continue | Advances watched minutes in `LearningProvider` | n/a |
-| Mark Complete | Sets completed state in `LearningProvider`; Learn Home and the Home learning section reflect it on return | n/a |
-| Related lesson | Pushes its own `/learn/[lessonId]` | previous lesson remains in stack |
+| Mark Complete | Sets completed state in `LearningProvider`; Sessions Home and the Home Session development section reflect it on return | n/a |
+| Related Session | Pushes its own `/sessions/[sessionId]` | previous Session remains in stack |
 
-Unknown or missing lesson IDs render a safe error state with a Learn fallback.
+Unknown or missing Session IDs render a safe error state with a Sessions fallback.
 
 ## Updates actions
 
@@ -60,7 +60,7 @@ Unknown or missing lesson IDs render a safe error state with a Learn fallback.
 | Training | `/training/schedule` | none | Update Detail |
 | Progress assessment | `/progress/assessment/[assessmentId]` | update `targetId` | Update Detail |
 | Coach feedback | `/progress/feedback/[feedbackId]` | update `targetId` | Update Detail |
-| Learning | `/learn/[lessonId]` | update `targetId` | Update Detail |
+| Academy Sessions | `/sessions/[sessionId]` | update `targetId` | Update Detail |
 | Fee | `/profile/fees` | shared July 2026 fee | Update Detail |
 
 Unknown or missing update IDs render a safe error state with an Updates fallback.
@@ -87,4 +87,4 @@ Unknown or missing update IDs render a safe error state with an Updates fallback
 - Attendance: 94%.
 - Current goal: Weak-foot Passing.
 - Current fee: ₹1,200 pending, due 15 July 2026.
-- Next session: Friday, 11 July, 5:00 PM–6:30 PM. It is listed as a special upcoming session alongside the regular Tuesday/Thursday/Saturday schedule.
+- Next session: Saturday, 11 July, 4:30 PM–6:00 PM. It is listed as a time-changed session within the regular Tuesday/Thursday/Saturday schedule.

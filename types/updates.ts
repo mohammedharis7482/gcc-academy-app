@@ -1,7 +1,7 @@
-export type UpdateCategory = 'All' | 'Training' | 'Progress' | 'Fees' | 'Learning' | 'Academy';
+export type UpdateCategory = 'All' | 'Match' | 'Camp' | 'Holiday' | 'Schedule Change' | 'Academy Event' | 'Payment Reminder' | 'General Notice';
 export type AcademyUpdateCategory = Exclude<UpdateCategory, 'All'>;
 export type UpdatePriority = 'normal' | 'important' | 'urgent';
-export type UpdateActionType = 'schedule' | 'progress' | 'feedback' | 'fee-details' | 'lesson' | 'event' | 'none';
+export type UpdateActionType = 'schedule' | 'progress' | 'feedback' | 'fee-details' | 'session' | 'event' | 'none';
 export type UpdateDateGroup = 'Today' | 'Yesterday' | 'Earlier';
 
 export interface UpdateMetadata {
@@ -12,7 +12,8 @@ export interface UpdateMetadata {
   readonly amount?: string;
   readonly dueDate?: string;
   readonly assessmentPeriod?: string;
-  readonly lessonDuration?: string;
+  readonly sessionDuration?: string;
+  readonly audience?: string;
 }
 
 export interface AcademyCommunicationUpdate {
@@ -27,6 +28,7 @@ export interface AcademyCommunicationUpdate {
   readonly dateGroup: UpdateDateGroup;
   readonly senderName: string;
   readonly senderRole: string;
+  readonly audienceLabel: string;
   readonly actionType: UpdateActionType;
   readonly actionLabel?: string;
   readonly targetId?: string;
@@ -46,4 +48,7 @@ export type UpdatesAction =
   | { readonly type: 'loading' }
   | { readonly type: 'mark-read'; readonly updateId: string }
   | { readonly type: 'mark-all-read' }
+  | { readonly type: 'sync-assessment-updates'; readonly updates: readonly AcademyCommunicationUpdate[] }
+  | { readonly type: 'sync-training-updates'; readonly updates: readonly AcademyCommunicationUpdate[] }
+  | { readonly type: 'sync-operation-updates'; readonly updates: readonly AcademyCommunicationUpdate[] }
   | { readonly type: 'replace-read-state'; readonly readIds: ReadonlySet<string> };

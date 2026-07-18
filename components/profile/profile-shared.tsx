@@ -12,8 +12,8 @@ export function ProfileHeader({ title = 'Profile', subtitle = 'Your academy acco
   return <View style={styles.header}><AppText variant="display" weight="extraBold">{title}</AppText><AppText color={colors.neutral.textSecondary}>{subtitle}</AppText></View>;
 }
 
-export function SubpageHeader({ title, subtitle, onBack }: { title: string; subtitle?: string; onBack: () => void }) {
-  return <View style={styles.subpageHeader}><AnimatedPressable accessibilityRole="button" accessibilityLabel="Go back" onPress={onBack} style={styles.back}><MaterialCommunityIcons name="arrow-left" size={22} color={colors.brand.navy} /></AnimatedPressable><View style={styles.headerCopy}><AppText variant="title" weight="extraBold">{title}</AppText>{subtitle ? <AppText variant="bodySmall" color={colors.neutral.textSecondary}>{subtitle}</AppText> : null}</View></View>;
+export function SubpageHeader({ title, subtitle, onBack, backDisabled = false, actionLabel, actionAccessibilityLabel, onAction }: { title: string; subtitle?: string; onBack: () => void; backDisabled?: boolean; actionLabel?: string; actionAccessibilityLabel?: string; onAction?: () => void }) {
+  return <View style={styles.subpageHeader}><AnimatedPressable accessibilityRole="button" accessibilityLabel="Go back" accessibilityState={{ disabled: backDisabled }} disabled={backDisabled} onPress={onBack} style={[styles.back, backDisabled && styles.disabled]}><MaterialCommunityIcons name="arrow-left" size={22} color={colors.brand.navy} /></AnimatedPressable><View style={styles.headerCopy}><AppText variant="title" weight="extraBold">{title}</AppText>{subtitle ? <AppText variant="bodySmall" color={colors.neutral.textSecondary}>{subtitle}</AppText> : null}</View>{actionLabel && onAction ? <AnimatedPressable accessibilityRole="button" accessibilityLabel={actionAccessibilityLabel ?? actionLabel} onPress={onAction} style={styles.headerAction}><AppText variant="caption" weight="extraBold" color={colors.brand.blue} numberOfLines={2}>{actionLabel}</AppText></AnimatedPressable> : null}</View>;
 }
 
 export function ProfileSection({ title, children }: { title: string; children: ReactNode }) {
@@ -43,7 +43,9 @@ const styles = StyleSheet.create({
   header: { paddingTop: layout.pageTop, paddingBottom: layout.headerToFirstSection, gap: spacing.xs },
   subpageHeader: { paddingTop: layout.pageTop, paddingBottom: layout.headerToFirstSection, flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   headerCopy: { flex: 1, minWidth: 0 },
+  headerAction: { minHeight: layout.minTouchTarget, maxWidth: 108, paddingLeft: spacing.xs, alignItems: 'flex-end', justifyContent: 'center' },
   back: { width: layout.minTouchTarget, height: layout.minTouchTarget, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.neutral.border, backgroundColor: colors.neutral.surface, alignItems: 'center', justifyContent: 'center' },
+  disabled: { opacity: 0.45 },
   sectionTitle: { marginBottom: layout.sectionHeaderToCard },
   card: { ...shadows.card, padding: layout.cardPadding, borderRadius: radius.large, borderWidth: 1, borderColor: colors.neutral.border, backgroundColor: colors.neutral.surface, gap: layout.cardGap },
   compactRows: { gap: 0 },

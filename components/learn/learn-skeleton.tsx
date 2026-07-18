@@ -1,6 +1,5 @@
-import { StyleSheet, View } from 'react-native';
-import { SkeletonPulse } from '@/components/common/skeleton-pulse';
-import { colors, radius, spacing } from '@/design/tokens';
+import { SkeletonList } from '@/components/states/loading-skeletons';
 
-export function LearnSkeleton() { return <SkeletonPulse style={styles.wrap}><View accessibilityLabel="Loading lessons">{[0, 1, 2].map((item) => <View key={item} style={[styles.card, item > 0 && styles.cardGap]}><View style={styles.image} /><View style={styles.copy}><View style={styles.short} /><View style={styles.long} /><View style={styles.medium} /></View></View>)}</View></SkeletonPulse>; }
-const styles = StyleSheet.create({ wrap: {}, card: { height: 108, padding: spacing.sm, flexDirection: 'row', gap: spacing.sm, borderRadius: radius.large, borderWidth: 1, borderColor: colors.neutral.border, backgroundColor: colors.neutral.surface }, cardGap: { marginTop: spacing.sm }, image: { width: 104, borderRadius: radius.medium, backgroundColor: colors.neutral.divider }, copy: { flex: 1, justifyContent: 'center', gap: spacing.sm }, short: { width: '38%', height: 10, borderRadius: radius.pill, backgroundColor: colors.neutral.divider }, long: { width: '92%', height: 18, borderRadius: radius.small, backgroundColor: colors.neutral.divider }, medium: { width: '65%', height: 12, borderRadius: radius.small, backgroundColor: colors.neutral.divider } });
+export function LearnSkeleton() {
+  return <SkeletonList count={3} variant="lesson" />;
+}

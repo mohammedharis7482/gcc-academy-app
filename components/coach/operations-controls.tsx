@@ -1,0 +1,30 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { ReactNode } from 'react';
+import { StyleSheet, View } from 'react-native';
+
+import { AnimatedPressable } from '@/components/common/animated-pressable';
+import { AppButton } from '@/components/common/app-button';
+import { AppText } from '@/components/common/app-text';
+import { StatusBadge } from '@/components/common/status-badge';
+import { colors, layout, radius, shadows, spacing } from '@/design/tokens';
+import { AcademySchedule } from '@/types/operations';
+
+export function OperationsChoiceChips<T extends string>({ values, selected, onSelect, label, disabledValues = [] }: { readonly values: readonly T[]; readonly selected: T; readonly onSelect: (value: T) => void; readonly label: string; readonly disabledValues?: readonly T[] }) {
+  return <View accessibilityRole="radiogroup" accessibilityLabel={label} style={styles.chips}>{values.map((value) => { const active = selected === value; const disabled = disabledValues.includes(value); return <AnimatedPressable key={value} accessibilityRole="radio" accessibilityLabel={`${label}: ${value}`} accessibilityState={{ checked: active, selected: active, disabled }} disabled={disabled} onPress={() => onSelect(value)} style={[styles.chip, active && styles.chipSelected, disabled && styles.disabled]}><AppText variant="bodySmall" weight="bold" color={active ? colors.neutral.white : colors.neutral.textSecondary}>{value}</AppText></AnimatedPressable>; })}</View>;
+}
+
+export function OperationsField({ title, supporting, children }: { readonly title: string; readonly supporting?: string; readonly children: ReactNode }) {
+  return <View style={styles.field}><View><AppText variant="heading" weight="extraBold">{title}</AppText>{supporting ? <AppText variant="caption" color={colors.neutral.textSecondary}>{supporting}</AppText> : null}</View>{children}</View>;
+}
+
+export function ScheduleCard({ schedule, busy = false, onEdit, onCancel, onNotify, onOpenPlan }: { readonly schedule: AcademySchedule; readonly busy?: boolean; readonly onEdit: () => void; readonly onCancel: () => void; readonly onNotify: () => void; readonly onOpenPlan?: () => void }) {
+  const tone = schedule.status === 'completed' ? 'success' : schedule.status === 'cancelled' ? 'error' : 'info';
+  return <View style={styles.schedule}><View style={styles.scheduleTop}><View style={styles.dateIcon}><MaterialCommunityIcons name="calendar-clock-outline" size={22} color={colors.brand.blue} /></View><View style={styles.grow}><AppText variant="heading" weight="extraBold">{schedule.dateLabel}</AppText><AppText variant="bodySmall" color={colors.neutral.textSecondary}>{schedule.categoryName} · {schedule.playerCount} players</AppText></View><StatusBadge label={schedule.status} tone={tone} /></View><View style={styles.meta}><Meta icon="clock-outline" label={schedule.time} /><Meta icon="map-marker-outline" label={schedule.pitch} /><Meta icon="account-tie-outline" label={`Coach ${schedule.coachName}`} /></View>{schedule.note ? <AppText variant="bodySmall" color={colors.neutral.textSecondary}>{schedule.note}</AppText> : null}<View style={styles.actions}><AppButton label="Edit" variant="secondary" onPress={onEdit} disabled={busy} style={styles.action} /><AppButton label={schedule.notifiedAt ? 'Players Notified' : 'Notify Players'} variant="ghost" onPress={onNotify} disabled={busy || Boolean(schedule.notifiedAt) || schedule.status === 'cancelled'} style={styles.action} /><AppButton label="Cancel" variant="ghost" onPress={onCancel} disabled={busy || schedule.status !== 'upcoming'} style={styles.action} /></View>{onOpenPlan ? <AnimatedPressable accessibilityRole="button" accessibilityLabel="Open session plan" accessibilityState={{ disabled: busy }} disabled={busy} onPress={onOpenPlan} style={styles.planLink}><MaterialCommunityIcons name="clipboard-text-outline" size={19} color={colors.brand.blue} /><AppText variant="bodySmall" weight="bold" color={colors.brand.blue}>Open session plan</AppText><MaterialCommunityIcons name="chevron-right" size={19} color={colors.brand.blue} /></AnimatedPressable> : null}</View>;
+}
+
+function Meta({ icon, label }: { readonly icon: keyof typeof MaterialCommunityIcons.glyphMap; readonly label: string }) { return <View style={styles.metaItem}><MaterialCommunityIcons name={icon} size={17} color={colors.brand.blue} /><AppText variant="caption" weight="semibold" color={colors.neutral.textSecondary} style={styles.grow}>{label}</AppText></View>; }
+
+const styles = StyleSheet.create({
+  grow: { flex: 1, minWidth: 0 }, field: { gap: spacing.sm }, chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }, chip: { minHeight: layout.chipHeight, paddingHorizontal: spacing.md, borderWidth: 1, borderColor: colors.neutral.border, borderRadius: radius.pill, backgroundColor: colors.neutral.surface, alignItems: 'center', justifyContent: 'center' }, chipSelected: { borderColor: colors.brand.navy, backgroundColor: colors.brand.navy }, disabled: { opacity: 0.4 },
+  schedule: { ...shadows.card, padding: layout.cardPadding, gap: spacing.sm, borderWidth: 1, borderColor: colors.neutral.border, borderRadius: radius.large, backgroundColor: colors.neutral.surface }, scheduleTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm }, dateIcon: { width: layout.standardIconSize, height: layout.standardIconSize, borderRadius: radius.medium, backgroundColor: colors.brand.blueSoft, alignItems: 'center', justifyContent: 'center' }, meta: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }, metaItem: { minWidth: '46%', flexGrow: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.xs }, actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }, action: { flexGrow: 1, minWidth: 92, paddingHorizontal: spacing.sm }, planLink: { minHeight: layout.minTouchTarget, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, borderTopWidth: 1, borderTopColor: colors.neutral.divider, paddingTop: spacing.xs },
+});

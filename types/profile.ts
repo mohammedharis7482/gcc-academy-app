@@ -58,8 +58,16 @@ export interface NotificationPreferences {
 export type NotificationPreferenceKey = keyof NotificationPreferences;
 export type AppLanguage = 'en';
 
+export type UserRole = 'player' | 'coach';
+
 export interface MockSession {
-  readonly playerId: string;
+  readonly schemaVersion: 2;
+  readonly userId: string;
+  readonly role: UserRole;
+  readonly displayName: string;
+  readonly academyId: string;
+  readonly categoryIds?: readonly string[];
+  readonly assignedSquadIds?: readonly string[];
   readonly signedInAt: string;
 }
 

@@ -9,22 +9,25 @@ interface AppScreenProps extends ScrollViewProps {
   children: ReactNode;
   scrollable?: boolean;
   withTabBarClearance?: boolean;
+  tabBarMetrics?: { readonly height: number; readonly contentClearance: number };
 }
 
-const tabPaths = new Set(['/', '/progress', '/learn', '/updates', '/profile']);
+const tabPaths = new Set(['/', '/progress', '/sessions', '/updates', '/profile']);
 
-export function AppScreen({ children, scrollable = true, withTabBarClearance, contentContainerStyle, ...props }: AppScreenProps) {
+export function AppScreen({ children, scrollable = true, withTabBarClearance, tabBarMetrics, contentContainerStyle, ...props }: AppScreenProps) {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
   const reserveTabBar = withTabBarClearance ?? tabPaths.has(pathname);
+  const tabHeight = tabBarMetrics?.height ?? layout.tabBarContentHeight;
+  const tabClearance = tabBarMetrics?.contentClearance ?? layout.tabClearance;
   const horizontalPadding = width <= 360 ? layout.compactScreenPadding : layout.pageHorizontal;
   const content = <View style={[styles.content, { paddingHorizontal: horizontalPadding }]}>{children}</View>;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       {scrollable ? (
-        <ScrollView {...props} showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scrollContent, { paddingBottom: (reserveTabBar ? layout.tabBarContentHeight : 0) + insets.bottom + layout.tabClearance }, contentContainerStyle]}>
+        <ScrollView {...props} showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scrollContent, { paddingBottom: (reserveTabBar ? tabHeight : 0) + insets.bottom + tabClearance }, contentContainerStyle]}>
           {content}
         </ScrollView>
       ) : content}

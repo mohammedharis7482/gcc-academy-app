@@ -3,7 +3,7 @@ import { demoConfig } from '@/config/demo';
 
 export const progressDashboardMock: ProgressDashboard = {
   playerName: demoConfig.player.name,
-  updatedAt: 'Updated 8 July 2026',
+  updatedAt: `Updated ${demoConfig.timeline.latestAssessmentDate}`,
   overall: {
     score: 78,
     changePercent: 6,
@@ -23,13 +23,13 @@ export const progressDashboardMock: ProgressDashboard = {
     { month: 'Apr', score: 69 }, { month: 'May', score: 71 }, { month: 'Jun', score: 74 }, { month: 'Jul', score: 78 },
   ],
   feedback: [
-    { id: 'feedback-jul', date: '8 July', coachName: 'Sandeep', message: 'Much calmer receiving under pressure. Your first touch is helping you find the next pass earlier.', focus: 'Weak-foot passing' },
+    { id: 'feedback-jul', date: '7 July', coachName: 'Sandeep', message: 'Much calmer receiving under pressure. Your first touch is helping you find the next pass earlier.', focus: 'Weak-foot passing' },
     { id: 'feedback-jun', date: '24 June', coachName: 'Ramshad', message: 'Good energy in transition. Keep scanning before the ball arrives.', focus: 'Awareness before receiving' },
     { id: 'feedback-jun-2', date: '10 June', coachName: 'Sandeep', message: 'Strong improvement in close control during small-sided games.', focus: 'Protecting the ball' },
   ],
   achievements: [
     { id: 'consistent-month', title: 'Consistent Month', description: 'Attended every June session', earnedDate: '30 June', icon: 'calendar-check' },
-    { id: 'touch-builder', title: 'Touch Builder', description: 'First-touch rating reached 4+', earnedDate: '8 July', icon: 'foot-print' },
+    { id: 'touch-builder', title: 'Touch Builder', description: 'First-touch rating reached 4+', earnedDate: '7 July', icon: 'foot-print' },
     { id: 'coach-choice', title: 'Coach’s Choice', description: 'Excellent training attitude', earnedDate: '21 June', icon: 'shield-star' },
   ],
   currentGoal: { id: 'weak-foot-100', title: '100 weak-foot passes', description: 'Complete controlled wall passes before the next technical review.', current: 64, target: 100, dueDate: '25 July' },

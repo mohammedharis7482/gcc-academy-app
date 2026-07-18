@@ -15,7 +15,7 @@ export const playerProfileMock: PlayerProfile = {
     batch: 'Evening Batch',
     headCoach: demoConfig.player.headCoach,
     assistantCoaches: ['Junaid', 'Ashil'],
-    trainingGround: 'GCC Football Ground',
+    trainingGround: demoConfig.academy.primaryTrainingGround,
     trainingDays: ['Tuesday', 'Thursday', 'Saturday'],
     joiningDate: '10 June 2024',
   },

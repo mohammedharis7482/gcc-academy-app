@@ -13,7 +13,10 @@ export interface TrainingSession {
   time: string;
   venue: string;
   coachName: string;
+  category?: string;
   countdown: string;
+  focus?: string;
+  status?: 'upcoming' | 'in-progress' | 'completed' | 'cancelled';
 }
 
 export interface ProgressSummary {
