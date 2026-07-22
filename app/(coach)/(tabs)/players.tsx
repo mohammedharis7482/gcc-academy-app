@@ -16,9 +16,11 @@ import { searchPlayers } from '@/data/academy';
 import { assessmentAverage } from '@/data/assessments';
 import { coachLayout, coachTabBarMetrics, colors, layout, spacing } from '@/design/tokens';
 import { AcademyPlayer } from '@/types/academy';
+import { useSingleNavigation } from '@/hooks/use-single-navigation';
 
 export default function CoachPlayersScreen() {
   const data = useAcademyData(); const attendance = useAttendanceData(); const assessmentState = useAssessments(); const router = useRouter(); const insets = useSafeAreaInsets();
+  const navigateOnce = useSingleNavigation();
   const [query, setQuery] = useState(''); const [category, setCategory] = useState<RosterCategoryFilter>('U13'); const [status, setStatus] = useState<RosterStatusFilter>('all');
   const currentPlayers = useMemo(() => data.players.map((player) => { const summary = attendance.getPlayerSummary(player.id); const latest = assessmentState.getLatestAssessment(player.id); const latestFull = assessmentState.getLatestFullAssessment(player.id); const attendancePlayer = summary ? { ...player, attendance: { ...player.attendance, ...summary }, sessionStatus: summary.currentStatus } : player; return { ...attendancePlayer, latestRating: latestFull ? assessmentAverage(latestFull) ?? attendancePlayer.latestRating : attendancePlayer.latestRating, focus: latest?.developmentGoal?.title ?? latest?.improvementArea ?? attendancePlayer.focus }; }), [assessmentState, attendance, data.players]);
   const categoryPlayers = useMemo(() => category === 'All' ? currentPlayers : currentPlayers.filter((player) => player.category === category), [category, currentPlayers]);
@@ -27,7 +29,7 @@ export default function CoachPlayersScreen() {
     const statusFiltered = status === 'all' ? searched : searched.filter((player) => player.sessionStatus === status);
     return [...statusFiltered].sort((a, b) => a.jerseyNumber - b.jerseyNumber || a.name.localeCompare(b.name));
   }, [categoryPlayers, query, status]);
-  const openPlayer = useCallback((player: AcademyPlayer) => { Keyboard.dismiss(); router.push({ pathname: '/(coach)/players/[playerId]', params: { playerId: player.id } }); }, [router]);
+  const openPlayer = useCallback((player: AcademyPlayer) => { Keyboard.dismiss(); navigateOnce(() => router.push({ pathname: '/(coach)/players/[playerId]', params: { playerId: player.id } })); }, [navigateOnce, router]);
   const squad = category === 'All' ? null : data.squads.find((item) => item.ageCategory === category);
 
   const header = <View><CoachPageHeader title="Players" subtitle="Manage your assigned squads" /><View style={styles.controls}><PlayerSearch query={query} onChange={setQuery} /><View><AppText variant="caption" weight="extraBold" color={colors.neutral.textSecondary} style={styles.filterLabel}>CATEGORY</AppText><CategoryFilters selected={category} onSelect={setCategory} /></View><View><AppText variant="caption" weight="extraBold" color={colors.neutral.textSecondary} style={styles.filterLabel}>SESSION STATUS</AppText><StatusFilters selected={status} onSelect={setStatus} /></View><View style={styles.summary}><View style={styles.grow}><AppText variant="heading" weight="extraBold">{squad?.name ?? 'All Academy Squads'}</AppText><AppText variant="caption" color={colors.neutral.textSecondary}>{status === 'all' ? `${categoryPlayers.length} players` : `${filteredPlayers.length} of ${categoryPlayers.length} players`}</AppText></View><AppText variant="caption" weight="bold" color={colors.brand.blue}>Jersey order</AppText></View><AppText variant="heading" weight="bold">Player Roster</AppText></View></View>;

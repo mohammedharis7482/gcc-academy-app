@@ -64,7 +64,7 @@ function AssessmentForm({ playerId, onChooseAnother }: { readonly playerId: stri
   const player = getPlayerById(playerId); const router = useRouter(); const navigation = useNavigation(); const assessments = useAssessments();
   const { showSuccess } = useToast();
   const insets = useSafeAreaInsets();
-  const [draft, setDraft] = useState(() => initialDraft(playerId)); const [dirty, setDirty] = useState(false); const [allowExit, setAllowExit] = useState(false); const [submitError, setSubmitError] = useState<string | null>(null); const [confirmation, setConfirmation] = useState<FeedbackConfirmation>(null); const pendingExitRef = useRef<(() => void) | null>(null);
+  const [draft, setDraft] = useState(() => initialDraft(playerId)); const [dirty, setDirty] = useState(false); const [allowExit, setAllowExit] = useState(false); const [submitError, setSubmitError] = useState<string | null>(null); const [confirmation, setConfirmation] = useState<FeedbackConfirmation>(null); const pendingExitRef = useRef<(() => void) | null>(null); const publishingRef = useRef(false);
   const previous = assessments.getLatestFullAssessment(playerId);
   const previousRatings = useMemo(() => previous ? Object.fromEntries(previous.skillRatings.map((item) => [item.skill, item.rating])) : undefined, [previous]);
   const improvement = draft.improvementArea === 'Custom' ? draft.customImprovement : draft.improvementArea;
@@ -84,14 +84,18 @@ function AssessmentForm({ playerId, onChooseAnother }: { readonly playerId: stri
   const copyPrevious = () => { if (previousRatings) updateDraft({ skillRatings: previousRatings }); };
   const toggleLesson = (lessonId: string) => updateDraft({ recommendedLessonIds: draft.recommendedLessonIds.includes(lessonId) ? draft.recommendedLessonIds.filter((id) => id !== lessonId) : [...draft.recommendedLessonIds, lessonId].slice(0, 2) });
   const publishFeedback = async () => {
+    if (publishingRef.current) return;
+    publishingRef.current = true;
     const publishDraft: AssessmentDraft = draft.mode === 'full-assessment' ? { ...draft, skillRatings: { discipline: draft.skillRatings.discipline ?? previousRatings?.discipline ?? 3, ...draft.skillRatings } } : draft;
-    const result = await assessments.publish(publishDraft); if (!result.record) { setSubmitError(result.error ?? 'Please try again.'); return; }
-    setSubmitError(null);
-    setDirty(false); setAllowExit(true);
-    const title = draft.mode === 'full-assessment' ? 'Assessment published' : 'Feedback saved';
-    const successMessage = `${player.name} · Focus: ${result.record.improvementArea}`;
-    showSuccess(title, result.error ? `${successMessage}. ${result.error}` : successMessage);
-    router.replace({ pathname: '/(coach)/players/[playerId]', params: { playerId: player.id } });
+    try {
+      const result = await assessments.publish(publishDraft); if (!result.record) { setSubmitError(result.error ?? 'Please try again.'); return; }
+      setSubmitError(null);
+      setDirty(false); setAllowExit(true);
+      const title = draft.mode === 'full-assessment' ? 'Assessment published' : 'Feedback saved';
+      const successMessage = `${player.name} · Focus: ${result.record.improvementArea}`;
+      showSuccess(title, result.error ? `${successMessage}. ${result.error}` : successMessage);
+      router.replace({ pathname: '/(coach)/players/[playerId]', params: { playerId: player.id } });
+    } finally { publishingRef.current = false; }
   };
   const requestSave = () => { const validation = draftError(draft); if (validation) { setSubmitError(validation); void AccessibilityInfo.announceForAccessibility(validation); return; } if (draft.mode === 'full-assessment') setConfirmation('publish'); else void publishFeedback(); };
   const discardAndExit = () => { const action = pendingExitRef.current; pendingExitRef.current = null; setConfirmation(null); setAllowExit(true); setDirty(false); requestAnimationFrame(() => action?.()); };

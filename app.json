@@ -11,16 +11,30 @@
     "newArchEnabled": true,
 
     "ios": {
-      "supportsTablet": true
+      "bundleIdentifier": "com.mhdharis.gccacademyapp",
+      "buildNumber": "1",
+      "supportsTablet": false,
+      "icon": "./assets/images/ios-icon.png",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
 
     "android": {
       "package": "com.mhd_haris.gccacademyapp",
       "versionCode": 2,
+      "allowBackup": false,
       "blockedPermissions": [
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.SYSTEM_ALERT_WINDOW"
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.REQUEST_INSTALL_PACKAGES",
+        "android.permission.MANAGE_EXTERNAL_STORAGE",
+        "android.permission.READ_SMS",
+        "android.permission.SEND_SMS",
+        "android.permission.READ_CALL_LOG",
+        "android.permission.WRITE_CALL_LOG",
+        "android.permission.QUERY_ALL_PACKAGES"
       ],
       "adaptiveIcon": {
         "backgroundColor": "#081D4D",
@@ -54,10 +68,7 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#F4F6F8",
-          "dark": {
-            "backgroundColor": "#F4F6F8"
-          }
+          "backgroundColor": "#F4F6F8"
         }
       ]
     ],

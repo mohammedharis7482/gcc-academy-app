@@ -1,10 +1,10 @@
 import { Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold, Manrope_800ExtraBold, useFonts } from '@expo-google-fonts/manrope';
 import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import 'react-native-reanimated';
 
 import { AuthLoadingScreen } from '@/components/common/auth-loading-screen';
@@ -29,7 +29,13 @@ export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({ Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold, Manrope_800ExtraBold });
   useEffect(() => { if (fontsLoaded || fontError) void SplashScreen.hideAsync(); }, [fontsLoaded, fontError]);
   if (!fontsLoaded && !fontError) return null;
-  return <RootErrorBoundary><ThemeProvider value={navigationTheme}><ToastProvider><AcademyDataProvider><AttendanceProvider><ProfileProvider><LearningProvider><UpdatesProvider><AcademyOperationsProvider><AssessmentProvider><TrainingPlanProvider><View style={styles.app}><OfflineBanner /><AppNavigator /></View></TrainingPlanProvider></AssessmentProvider></AcademyOperationsProvider></UpdatesProvider></LearningProvider></ProfileProvider></AttendanceProvider></AcademyDataProvider><StatusBar style="dark" backgroundColor={colors.neutral.background} /></ToastProvider></ThemeProvider></RootErrorBoundary>;
+  return <RootErrorBoundary><ThemeProvider value={navigationTheme}><ToastProvider><AcademyDataProvider><AttendanceProvider><ProfileProvider><LearningProvider><UpdatesProvider><AcademyOperationsProvider><AssessmentProvider><TrainingPlanProvider><View style={styles.app}><OfflineBanner /><AppNavigator /></View></TrainingPlanProvider></AssessmentProvider></AcademyOperationsProvider></UpdatesProvider></LearningProvider></ProfileProvider></AttendanceProvider></AcademyDataProvider><AppStatusBar /></ToastProvider></ThemeProvider></RootErrorBoundary>;
+}
+
+function AppStatusBar() {
+  const pathname = usePathname();
+  const useLightContent = Platform.OS === 'ios' && pathname === '/sign-in';
+  return <StatusBar style={useLightContent ? 'light' : 'dark'} backgroundColor={colors.neutral.background} />;
 }
 
 function AppNavigator() {

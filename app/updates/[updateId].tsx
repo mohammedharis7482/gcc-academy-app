@@ -9,11 +9,13 @@ import { UpdatesSkeleton } from '@/components/updates/updates-states';
 import { useUpdates } from '@/contexts/updates-context';
 import { layout, spacing } from '@/design/tokens';
 import { AcademyCommunicationUpdate } from '@/types/updates';
+import { useSingleNavigation } from '@/hooks/use-single-navigation';
 
 function normalizeUpdateId(value: string | string[] | undefined) { const candidate = Array.isArray(value) ? value[0] : value; const normalized = candidate?.trim(); return normalized || undefined; }
 
 export default function UpdateDetailScreen() {
   const router = useRouter();
+  const navigateOnce = useSingleNavigation();
   const params = useLocalSearchParams<{ updateId?: string | string[] }>();
   const { updates, status, markRead, retry } = useUpdates();
   const updateId = normalizeUpdateId(params.updateId);
@@ -24,7 +26,7 @@ export default function UpdateDetailScreen() {
   if (status === 'error') return <AppScreen withTabBarClearance={false}><ContentState type="error" title="Update unavailable" message="This academy update could not be loaded." onRetry={retry} /></AppScreen>;
   if (!update) return <AppScreen withTabBarClearance={false}><ContentState type="error" title="Update not found" message="This update ID is invalid or no longer available." actionLabel="Back to Updates" onRetry={goBack} /></AppScreen>;
   const action = getUpdateAction(update, router);
-  return <AppScreen><View style={styles.sections}><UpdateDetailHeader update={update} onBack={goBack} /><UpdateMessageCard update={update} /><UpdateMetadataCard metadata={update.metadata} /><UpdatePrimaryAction label={action?.label} onPress={action?.onPress} /><UpdateSenderCard update={update} /></View></AppScreen>;
+  return <AppScreen><View style={styles.sections}><UpdateDetailHeader update={update} onBack={goBack} /><UpdateMessageCard update={update} /><UpdateMetadataCard metadata={update.metadata} /><UpdatePrimaryAction label={action?.label} onPress={action ? () => navigateOnce(action.onPress) : undefined} /><UpdateSenderCard update={update} /></View></AppScreen>;
 }
 
 function getUpdateAction(update: AcademyCommunicationUpdate, router: ReturnType<typeof useRouter>): { label: string; onPress: () => void } | undefined {

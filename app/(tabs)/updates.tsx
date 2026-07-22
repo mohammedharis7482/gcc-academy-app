@@ -13,6 +13,7 @@ import { useToast } from '@/components/states/success-toast';
 import { useUpdates } from '@/contexts/updates-context';
 import { updateCategories } from '@/data/updates';
 import { layout } from '@/design/tokens';
+import { useSingleNavigation } from '@/hooks/use-single-navigation';
 import { UpdateCategory, UpdateDateGroup } from '@/types/updates';
 
 const dateGroups: readonly UpdateDateGroup[] = ['Today', 'Yesterday', 'Earlier'];
@@ -21,8 +22,9 @@ export default function UpdatesScreen() {
   const router = useRouter();
   const { updates, status, unreadCount, isRead, markAllRead, retry } = useUpdates();
   const { showSuccess } = useToast();
+  const navigateOnce = useSingleNavigation();
   const [selected, setSelected] = useState<UpdateCategory>('All');
-  const openUpdate = (updateId: string) => router.push({ pathname: '/updates/[updateId]', params: { updateId } });
+  const openUpdate = (updateId: string) => navigateOnce(() => router.push({ pathname: '/updates/[updateId]', params: { updateId } }));
   const filtered = useMemo(() => updates.filter((update) => selected === 'All' || update.category === selected), [selected, updates]);
   const important = updates.find((update) => !isRead(update.id) && update.priority !== 'normal');
 

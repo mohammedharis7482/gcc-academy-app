@@ -5,7 +5,7 @@ import { useUpdates } from '@/contexts/updates-context';
 
 export default function TabLayout() {
   const { unreadCount } = useUpdates();
-  return <Tabs initialRouteName="index" tabBar={(props) => <PlayerTabBar {...props} unreadCount={unreadCount} />} screenOptions={{ headerShown: false, tabBarHideOnKeyboard: true }}>
+  return <Tabs initialRouteName="index" tabBar={(props) => <PlayerTabBar {...props} unreadCount={unreadCount} />} screenOptions={{ headerShown: false, tabBarHideOnKeyboard: true, freezeOnBlur: true }}>
     <Tabs.Screen name="index" options={{ title: 'Home', tabBarAccessibilityLabel: 'Home tab' }} />
     <Tabs.Screen name="progress" options={{ title: 'Progress', tabBarAccessibilityLabel: 'Progress tab' }} />
     <Tabs.Screen name="sessions" options={{ title: 'Sessions', tabBarAccessibilityLabel: 'Sessions tab' }} />

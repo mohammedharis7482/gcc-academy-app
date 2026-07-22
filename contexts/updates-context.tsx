@@ -29,7 +29,7 @@ function updatesReducer(state: UpdatesState, action: UpdatesAction): UpdatesStat
     case 'load-error': return { ...state, status: 'error' };
     case 'load-success': {
       const domainUpdates = state.updates.filter((item) => item.id.startsWith(assessmentUpdatePrefix) || item.id.startsWith(trainingUpdatePrefix) || item.id.startsWith(operationUpdatePrefix));
-      return { updates: [...domainUpdates, ...action.updates], status: 'ready', readIds: new Set([...state.readIds, ...action.updates.filter((item) => item.initiallyRead).map((item) => item.id)]) };
+      return { updates: [...domainUpdates, ...action.updates], status: 'ready', readIds: new Set([...state.readIds, ...action.readIds]) };
     }
     case 'mark-read': return state.readIds.has(action.updateId) ? state : { ...state, readIds: new Set([...state.readIds, action.updateId]) };
     case 'mark-all-read': return { ...state, readIds: new Set(state.updates.map((item) => item.id)) };
@@ -57,9 +57,12 @@ async function loadUpdates(dispatch: Dispatch<UpdatesAction>) {
   dispatch({ type: 'loading' });
   try {
     const [updates, storedIds] = await Promise.all([updatesService.getUpdates(), readStoredValue(storageKeys.updatesReadState, isReadIds)]);
-    dispatch({ type: 'load-success', updates });
     const validIds = new Set(updates.map((update) => update.id));
-    storedIds?.filter((id) => validIds.has(id) || id.startsWith(assessmentUpdatePrefix) || id.startsWith(trainingUpdatePrefix) || id.startsWith(operationUpdatePrefix)).forEach((updateId) => dispatch({ type: 'mark-read', updateId }));
+    const restoredIds = new Set([
+      ...updates.filter((update) => update.initiallyRead).map((update) => update.id),
+      ...(storedIds?.filter((id) => validIds.has(id) || id.startsWith(assessmentUpdatePrefix) || id.startsWith(trainingUpdatePrefix) || id.startsWith(operationUpdatePrefix)) ?? []),
+    ]);
+    dispatch({ type: 'load-success', updates, readIds: restoredIds });
   }
   catch { dispatch({ type: 'load-error' }); }
 }

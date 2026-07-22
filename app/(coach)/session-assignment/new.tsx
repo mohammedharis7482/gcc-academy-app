@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 
 import { OperationsField } from '@/components/coach/operations-controls';
@@ -22,15 +22,20 @@ type AssignmentSheet = 'session' | 'target' | 'category' | 'players' | null;
 
 export default function NewSessionAssignmentRoute() {
   const router = useRouter(); const params = useLocalSearchParams<{ playerId?: string | string[] }>(); const initialPlayerId = Array.isArray(params.playerId) ? params.playerId[0] : params.playerId; const operations = useAcademyOperations(); const { showSuccess } = useToast(); const players = useMemo(() => getPlayersByCategory('U13'), []); const validInitialPlayerId = players.some((player) => player.id === initialPlayerId) ? initialPlayerId : undefined;
+  const assigningRef = useRef(false);
   const [sessionId, setSessionId] = useState(learningLessons[0].id); const [targetLabel, setTargetLabel] = useState<(typeof targetLabels)[number]>(validInitialPlayerId ? 'One Player' : 'Category'); const [selectedPlayerIds, setSelectedPlayerIds] = useState<readonly string[]>(validInitialPlayerId ? [validInitialPlayerId] : []); const [message, setMessage] = useState('Watch this Academy Session before your next training.'); const [error, setError] = useState<string>(); const [sheet, setSheet] = useState<AssignmentSheet>(null);
   const back = () => { if (router.canGoBack()) router.back(); else router.replace('/(coach)/(tabs)'); };
   const togglePlayer = (id: string) => setSelectedPlayerIds((current) => current.includes(id) ? current.filter((item) => item !== id) : targetLabel === 'One Player' ? [id] : [...current, id]);
   const assign = async () => {
+    if (assigningRef.current) return;
     const targetType: SessionAssignmentTarget = targetLabel === 'Category' ? 'category' : targetLabel === 'One Player' ? 'player' : 'players'; const targetIds = targetType === 'category' ? ['u13'] : targetType === 'player' ? selectedPlayerIds.slice(0, 1) : selectedPlayerIds;
     if (!targetIds.length) { setError('Select at least one player.'); return; }
-    const result = await operations.assignSession({ sessionId, targetType, targetIds, assignedById: 'coach-sandeep', assignedByName: 'Sandeep', message: message.trim() || undefined });
-    if (!result.value) { setError(result.error ?? 'Unable to assign this Session.'); return; }
-    showSuccess('Session assigned', 'It now appears on Player Home, Sessions, and Updates.'); router.back();
+    assigningRef.current = true;
+    try {
+      const result = await operations.assignSession({ sessionId, targetType, targetIds, assignedById: 'coach-sandeep', assignedByName: 'Sandeep', message: message.trim() || undefined });
+      if (!result.value) { setError(result.error ?? 'Unable to assign this Session.'); return; }
+      showSuccess('Session assigned', 'It now appears on Player Home, Sessions, and Updates.'); back();
+    } finally { assigningRef.current = false; }
   };
   const selectedSession = learningLessons.find((session) => session.id === sessionId) ?? learningLessons[0];
   const selectedPlayersLabel = selectedPlayerIds.length ? targetLabel === 'One Player' ? players.find((player) => player.id === selectedPlayerIds[0])?.name ?? 'Select player' : `${selectedPlayerIds.length} players selected` : 'Select players';

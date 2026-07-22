@@ -43,7 +43,7 @@ export interface UpdatesState {
 }
 
 export type UpdatesAction =
-  | { readonly type: 'load-success'; readonly updates: readonly AcademyCommunicationUpdate[] }
+  | { readonly type: 'load-success'; readonly updates: readonly AcademyCommunicationUpdate[]; readonly readIds: ReadonlySet<string> }
   | { readonly type: 'load-error' }
   | { readonly type: 'loading' }
   | { readonly type: 'mark-read'; readonly updateId: string }

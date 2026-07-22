@@ -17,9 +17,11 @@ import { useTrainingPlans } from '@/contexts/training-plan-context';
 import { useAcademyOperations } from '@/contexts/academy-operations-context';
 import { coachLayout, coachTabBarMetrics } from '@/design/tokens';
 import { CoachDashboardTask } from '@/types/academy';
+import { useSingleNavigation } from '@/hooks/use-single-navigation';
 
 export default function CoachDashboardScreen() {
   const router = useRouter();
+  const navigateOnce = useSingleNavigation();
   const data = useAcademyData();
   const attendance = useAttendanceData();
   const assessmentState = useAssessments();
@@ -50,17 +52,19 @@ export default function CoachDashboardScreen() {
     return task;
   });
   const openTask = (task: CoachDashboardTask) => {
-    if (task.targetTab === 'attendance') router.push({ pathname: '/(coach)/(tabs)/attendance', params: { sessionId: 'training-1' } });
-    else if (task.targetTab === 'training') router.push('/(coach)/(tabs)/schedule');
-    else if (task.type === 'assessment') router.push('/(coach)/feedback');
-    else router.push('/(coach)/(tabs)/players');
+    navigateOnce(() => {
+      if (task.targetTab === 'attendance') router.navigate({ pathname: '/(coach)/(tabs)/attendance', params: { sessionId: 'training-1' } });
+      else if (task.targetTab === 'training') router.navigate('/(coach)/(tabs)/schedule');
+      else if (task.type === 'assessment') router.push('/(coach)/feedback');
+      else router.navigate('/(coach)/(tabs)/players');
+    });
   };
   const loading = data.rosterStatus === 'loading' || attendance.loadStatus === 'loading' || assessmentState.status === 'loading' || trainingState.status === 'loading' || operations.status === 'loading';
   const partialError = data.rosterStatus === 'error' || attendance.loadStatus === 'error' || assessmentState.status === 'error' || trainingState.status === 'error' || operations.status === 'error';
   if (loading) return <AppScreen withTabBarClearance tabBarMetrics={coachTabBarMetrics}><View style={styles.loading} accessibilityLabel="Loading coach dashboard"><PageHeaderSkeleton /><HeroCardSkeleton height={220} /><SummaryCardSkeleton /><ListRowSkeleton /></View></AppScreen>;
   if (!squad) return <AppScreen withTabBarClearance tabBarMetrics={coachTabBarMetrics}><CoachHeader name={data.coach.name} roleTitle={data.coach.roleTitle} squadName="No assigned squad" /><ContentState type="empty" icon="account-group-outline" title="No players assigned" message="Assigned squads and training tasks will appear here." /></AppScreen>;
   const recentActivity = operations.announcements[0] ? { id: operations.announcements[0].id, title: 'Announcement posted', summary: operations.announcements[0].title, publishedAt: 'Just now' } : operations.assignments.find((item) => item.source === 'coach-created') ? { id: 'session-assigned', title: 'Academy Session assigned', summary: 'The Player Sessions list has been updated.', publishedAt: 'Just now' } : data.latestUpdate;
-  return <AppScreen withTabBarClearance tabBarMetrics={coachTabBarMetrics}><FadeInView translate={false}><CoachHeader name={data.coach.name} roleTitle={data.coach.roleTitle} squadName={squad.name} /></FadeInView><View style={styles.sections}>{partialError ? <InlineInfoBanner tone="warning" title="Some coach information could not be refreshed" message="Saved squad information remains available." /> : null}<FadeInView delay={40}><CoachTrainingCard session={dashboardSession} squad={squad} attendanceSubmitted={Boolean(attendanceRecord)} feedbackPending={feedbackPending} trainingPlan={trainingPlan} onAttendance={() => router.push({ pathname: '/(coach)/(tabs)/attendance', params: { sessionId: 'training-1' } })} onEditSchedule={() => router.push({ pathname: '/(coach)/schedule/[scheduleId]', params: { scheduleId: dashboardSession.id } })} /></FadeInView><View><SectionHeader title="Quick Actions" /><View style={styles.quickGrid}><QuickAction testID="coach-take-attendance" icon="clipboard-check-outline" label="Mark Attendance" onPress={() => router.push({ pathname: '/(coach)/(tabs)/attendance', params: { sessionId: 'training-1' } })} /><QuickAction testID="coach-add-schedule" icon="calendar-plus" label="Add Schedule" onPress={() => router.push('/(coach)/schedule/new')} /><QuickAction testID="coach-post-update" icon="bullhorn-outline" label="Post Update" onPress={() => router.push('/(coach)/announcement/new')} /><QuickAction testID="coach-assign-session" icon="play-box-multiple-outline" label="Assign Session" onPress={() => router.push('/(coach)/session-assignment/new')} /></View></View><View><SectionHeader title="Pending Tasks" /><CoachTaskList tasks={tasks} onTaskPress={openTask} /></View><View><SectionHeader title="Recent Activity" /><CoachUpdateCard update={recentActivity} onPress={() => router.push('/(coach)/update')} /></View></View></AppScreen>;
+  return <AppScreen withTabBarClearance tabBarMetrics={coachTabBarMetrics}><FadeInView translate={false}><CoachHeader name={data.coach.name} roleTitle={data.coach.roleTitle} squadName={squad.name} /></FadeInView><View style={styles.sections}>{partialError ? <InlineInfoBanner tone="warning" title="Some coach information could not be refreshed" message="Saved squad information remains available." /> : null}<FadeInView delay={40}><CoachTrainingCard session={dashboardSession} squad={squad} attendanceSubmitted={Boolean(attendanceRecord)} feedbackPending={feedbackPending} trainingPlan={trainingPlan} onAttendance={() => navigateOnce(() => router.navigate({ pathname: '/(coach)/(tabs)/attendance', params: { sessionId: 'training-1' } }))} onEditSchedule={() => navigateOnce(() => router.push({ pathname: '/(coach)/schedule/[scheduleId]', params: { scheduleId: dashboardSession.id } }))} /></FadeInView><View><SectionHeader title="Quick Actions" /><View style={styles.quickGrid}><QuickAction testID="coach-take-attendance" icon="clipboard-check-outline" label="Mark Attendance" onPress={() => navigateOnce(() => router.navigate({ pathname: '/(coach)/(tabs)/attendance', params: { sessionId: 'training-1' } }))} /><QuickAction testID="coach-add-schedule" icon="calendar-plus" label="Add Schedule" onPress={() => navigateOnce(() => router.push('/(coach)/schedule/new'))} /><QuickAction testID="coach-post-update" icon="bullhorn-outline" label="Post Update" onPress={() => navigateOnce(() => router.push('/(coach)/announcement/new'))} /><QuickAction testID="coach-assign-session" icon="play-box-multiple-outline" label="Assign Session" onPress={() => navigateOnce(() => router.push('/(coach)/session-assignment/new'))} /></View></View><View><SectionHeader title="Pending Tasks" /><CoachTaskList tasks={tasks} onTaskPress={openTask} /></View><View><SectionHeader title="Recent Activity" /><CoachUpdateCard update={recentActivity} onPress={() => navigateOnce(() => router.push('/(coach)/update'))} /></View></View></AppScreen>;
 }
 
 const styles = StyleSheet.create({ sections: { gap: coachLayout.sectionGap }, loading: { gap: coachLayout.cardGap }, quickGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: coachLayout.actionGridGap } });
