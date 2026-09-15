@@ -195,10 +195,11 @@ The bridge reads `samp.admin.operations` on mount and whenever the signed-in acc
 `AdminDataProvider` calls its `refresh()` after publishing, so a new announcement appears without an
 app restart. It holds no state that any Player or Coach screen consumes.
 
-This is a deliberate exception to the CLAUDE.md rule that role-specific providers mount inside their
-own group layout. It is not a role provider: its audience is the Player feed, and the Announcement
-chain in CLAUDE.md §8 ("Author posts → audience targeting → recipients see it") cannot complete from
-inside `(admin)`. `AcademyOperationsProvider` is the existing precedent for the same trade-off.
+CLAUDE.md §7 records this as a sanctioned exception: providers that must reach another role's screens
+mount in the root layout, and they hold no state the other roles' screens consume. This one is not a
+role provider — its audience is the Player feed, and the Announcement chain in CLAUDE.md §8
+("Author posts → audience targeting → recipients see it") cannot complete from inside `(admin)`.
+`AcademyOperationsProvider` is named in the same exception for the same reason.
 
 ### Audience targeting
 

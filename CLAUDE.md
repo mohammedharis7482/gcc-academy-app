@@ -158,6 +158,11 @@ contexts/   React state + persistence
   roster at once
 - Role-specific providers mount inside their own group layout, not the root layout
 
+  Exception: providers that must reach another role's screens mount in the root
+  layout — `AcademyOperationsProvider` (coach → player updates) and
+  `AdminAnnouncementsProvider` (admin → player updates). They hold no state the
+  other roles' screens consume.
+
 Never duplicate a fact across datasets. Derive shared facts from
 `sharedAcademyData` so all three roles agree.
 
@@ -277,7 +282,6 @@ device QA and release.
 - `docs/app-role-architecture.md` still describes two roles
 - `clearDemoStorage` in `utils/app-storage.ts` does not clear
   `samp.admin.operations` (Admin has its own `clearAdminStorage`)
-- Admin announcements do not yet write into the Player Updates feed
 - Attendance is owned by the Coach module; Admin reads it only
 
 ---
