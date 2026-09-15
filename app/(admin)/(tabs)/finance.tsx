@@ -6,6 +6,7 @@ import { AdminFilterChips, AdminFilterLabel, AdminSearch } from '@/components/ad
 import { AdminPageHeader } from '@/components/admin/admin-header';
 import { FeeRow, MoneyFlowCard, SquadCollectionReport } from '@/components/admin/admin-finance';
 import { AdminQuickAction } from '@/components/admin/admin-dashboard-lists';
+import { AdminCollapsibleSection } from '@/components/admin/admin-disclosure';
 import { CollectionCard } from '@/components/admin/admin-metrics';
 import { AdminListSkeleton } from '@/components/admin/admin-states';
 import { AppScreen } from '@/components/common/app-screen';
@@ -30,6 +31,7 @@ export default function AdminFinanceScreen() {
   const [period, setPeriod] = useState<AdminBillingPeriod>(adminDemoConfig.billing.currentPeriod);
   const [status, setStatus] = useState<FeeFilter>('pending');
   const [query, setQuery] = useState('');
+  const [squadOpen, setSquadOpen] = useState(false);
 
   const summary = useMemo(() => admin.getCollectionSummary(period), [admin, period]);
   const money = useMemo(() => admin.getMoneySummary(period), [admin, period]);
@@ -59,7 +61,7 @@ export default function AdminFinanceScreen() {
         <AdminQuickAction testID="admin-finance-add-income" icon="cash-plus" label="Add Income" onPress={() => navigateOnce(() => router.push('/(admin)/finance/new-income'))} /><AdminQuickAction testID="admin-finance-salaries" icon="whistle-outline" label={pendingSalaries ? `Coach Salaries · ${pendingSalaries}` : 'Coach Salaries'} onPress={() => navigateOnce(() => router.push('/(admin)/finance/salaries'))} />
       </View>
       <CollectionCard summary={summary} />
-      <View><SectionHeader title="Squad Collection" /><SquadCollectionReport reports={reports} /></View>
+      <AdminCollapsibleSection testID="admin-finance-squad-collection" title="Squad Collection" summary={`${reports.length} squads · tap to view`} expanded={squadOpen} onToggle={() => setSquadOpen((value) => !value)}><SquadCollectionReport reports={reports} /></AdminCollapsibleSection>
       <View style={styles.controls}>
         <AdminSearch testID="admin-fee-search" query={query} onChange={setQuery} placeholder="Search member, ID or squad" accessibilityLabel="Search fee records by member, ID, or squad" />
         <View><AdminFilterLabel label="Fee status" /><AdminFilterChips options={statusOptions} selected={status} onSelect={setStatus} label="Fee status" testIDPrefix="admin-fee-status" /></View>

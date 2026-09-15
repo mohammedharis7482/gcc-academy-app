@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { AdminCollapsibleSection } from '@/components/admin/admin-disclosure';
 import { AdminFilterChips, AdminFilterLabel } from '@/components/admin/admin-filters';
 import { ExpenseBreakdownCard, SquadCollectionReport } from '@/components/admin/admin-finance';
 import { MetricGrid } from '@/components/admin/admin-metrics';
@@ -23,6 +24,8 @@ export default function AdminReportsScreen() {
   const router = useRouter();
   const admin = useAdminData();
   const [period, setPeriod] = useState<AdminBillingPeriod>(adminDemoConfig.billing.currentPeriod);
+  const [mixOpen, setMixOpen] = useState(false);
+  const [attendanceOpen, setAttendanceOpen] = useState(false);
   const back = () => { if (router.canGoBack()) router.back(); else router.replace('/(admin)/(tabs)/settings'); };
 
   const summary = useMemo(() => admin.getCollectionSummary(period), [admin, period]);
@@ -56,8 +59,8 @@ export default function AdminReportsScreen() {
       ]} /></ProfileSection>
       <ProfileSection title="Money Out by Category"><ExpenseBreakdownCard breakdown={breakdown} /></ProfileSection>
       <ProfileSection title="Squad Performance"><SquadCollectionReport reports={reports} /></ProfileSection>
-      <ProfileSection title="Enrolment Mix"><View style={styles.card}>{enrolmentSplit.map((item) => <View key={item.label} style={styles.splitRow}><View style={styles.splitTop}><AppText variant="bodySmall" weight="bold" style={styles.grow}>{item.label}</AppText><AppText variant="bodySmall" weight="extraBold" color={item.tone}>{item.count}</AppText></View><ProgressBar progress={totalSplit ? item.count / totalSplit : 0} color={item.tone} accessibilityLabel={`${item.label}: ${item.count} members`} /></View>)}</View></ProfileSection>
-      <ProfileSection title="Squad Attendance"><View style={styles.card}>{reports.map((report) => <View key={report.squadId} style={styles.splitRow}><View style={styles.splitTop}><AppText variant="bodySmall" weight="bold" numberOfLines={1} style={styles.grow}>{report.squadName}</AppText><AppText variant="bodySmall" weight="extraBold" color={report.averageAttendance >= 85 ? colors.status.success : colors.status.warning}>{report.averageAttendance}%</AppText></View><ProgressBar progress={report.averageAttendance / 100} color={report.averageAttendance >= 85 ? colors.status.success : colors.status.warning} accessibilityLabel={`${report.squadName} attendance ${report.averageAttendance} percent`} /></View>)}</View></ProfileSection>
+      <AdminCollapsibleSection testID="admin-report-enrolment-mix" title="Enrolment Mix" summary={`${admin.overview.activeMembers} active · ${admin.overview.trialMembers} trial · ${admin.overview.pausedMembers} paused`} expanded={mixOpen} onToggle={() => setMixOpen((value) => !value)}><View style={styles.card}>{enrolmentSplit.map((item) => <View key={item.label} style={styles.splitRow}><View style={styles.splitTop}><AppText variant="bodySmall" weight="bold" style={styles.grow}>{item.label}</AppText><AppText variant="bodySmall" weight="extraBold" color={item.tone}>{item.count}</AppText></View><ProgressBar progress={totalSplit ? item.count / totalSplit : 0} color={item.tone} accessibilityLabel={`${item.label}: ${item.count} members`} /></View>)}</View></AdminCollapsibleSection>
+      <AdminCollapsibleSection testID="admin-report-squad-attendance" title="Squad Attendance" summary={`${admin.overview.averageAttendance}% academy average`} expanded={attendanceOpen} onToggle={() => setAttendanceOpen((value) => !value)}><View style={styles.card}>{reports.map((report) => <View key={report.squadId} style={styles.splitRow}><View style={styles.splitTop}><AppText variant="bodySmall" weight="bold" numberOfLines={1} style={styles.grow}>{report.squadName}</AppText><AppText variant="bodySmall" weight="extraBold" color={report.averageAttendance >= 85 ? colors.status.success : colors.status.warning}>{report.averageAttendance}%</AppText></View><ProgressBar progress={report.averageAttendance / 100} color={report.averageAttendance >= 85 ? colors.status.success : colors.status.warning} accessibilityLabel={`${report.squadName} attendance ${report.averageAttendance} percent`} /></View>)}</View></AdminCollapsibleSection>
       <AppText variant="caption" color={colors.neutral.textMuted}>Reports are generated from the demo academy directory stored on this device.</AppText>
     </View>
   </AppScreen>;

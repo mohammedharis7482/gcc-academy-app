@@ -17,7 +17,7 @@ const approvalIcons: Readonly<Record<ApprovalKind, IconName>> = { enrolment: 'ac
 const activityIcons: Readonly<Record<AdminActivityKind, IconName>> = { payment: 'cash-check', enrolment: 'account-plus-outline', approval: 'clipboard-check-outline', announcement: 'bullhorn-outline', coach: 'whistle-outline', squad: 'account-group-outline', expense: 'cash-minus', income: 'cash-plus' };
 
 export function AdminQuickAction({ icon, label, onPress, testID }: { readonly icon: IconName; readonly label: string; readonly onPress: () => void; readonly testID: string }) {
-  return <AnimatedPressable testID={testID} accessibilityRole="button" accessibilityLabel={label} onPress={onPress} pressedScale={motion.scale.pressStrong} style={styles.quickAction}><View style={styles.quickIcon}><MaterialCommunityIcons name={icon} size={22} color={colors.brand.navy} /></View><View style={styles.quickLabelWrap}><AppText variant="button" weight="bold" numberOfLines={2} style={styles.quickLabel}>{label}</AppText></View><View style={styles.quickArrow}><MaterialCommunityIcons name="arrow-top-right" size={18} color={colors.brand.blue} /></View></AnimatedPressable>;
+  return <AnimatedPressable testID={testID} accessibilityRole="button" accessibilityLabel={label} onPress={onPress} pressedScale={motion.scale.pressStrong} style={styles.quickAction}><View style={styles.quickIcon}><MaterialCommunityIcons name={icon} size={22} color={colors.brand.navy} /></View><AppText variant="button" weight="bold" numberOfLines={2} style={styles.quickLabel}>{label}</AppText><MaterialCommunityIcons name="arrow-top-right" size={18} color={colors.brand.blue} /></AnimatedPressable>;
 }
 
 export function ApprovalList({ approvals, busy = false, onDecide, onOpen }: { readonly approvals: readonly AdminApprovalItem[]; readonly busy?: boolean; readonly onDecide?: (approval: AdminApprovalItem, state: 'approved' | 'declined') => void; readonly onOpen?: () => void }) {
@@ -46,8 +46,7 @@ const styles = StyleSheet.create({
   approvalActions: { flexDirection: 'row', gap: spacing.xs }, approvalAction: { flex: 1, minWidth: 96 },
   activity: { minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: spacing.xs }, activityAt: { maxWidth: 96, textAlign: 'right' },
   divided: { borderTopWidth: 1, borderTopColor: colors.neutral.divider, paddingTop: spacing.sm },
-  quickAction: { ...shadows.card, flexGrow: 1, flexBasis: '46%', minWidth: 148, minHeight: 104, padding: adminLayout.cardPadding, borderWidth: 1, borderColor: colors.neutral.border, borderRadius: radius.compact, backgroundColor: colors.neutral.surface, gap: spacing.xs },
-  quickIcon: { width: layout.standardIconSize, height: layout.standardIconSize, borderRadius: radius.small, backgroundColor: colors.brand.blueSoft, alignItems: 'center', justifyContent: 'center' },
-  quickLabelWrap: { flex: 1, justifyContent: 'flex-end' }, quickLabel: { flexShrink: 1 },
-  quickArrow: { position: 'absolute', top: adminLayout.cardPadding, right: adminLayout.cardPadding },
+  quickAction: { ...shadows.card, flexGrow: 1, flexBasis: '46%', minWidth: 148, minHeight: 68, paddingHorizontal: adminLayout.compactRowPaddingHorizontal, paddingVertical: spacing.xs, borderWidth: 1, borderColor: colors.neutral.border, borderRadius: radius.compact, backgroundColor: colors.neutral.surface, flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  quickIcon: { width: layout.standardIconSize, height: layout.standardIconSize, flexShrink: 0, borderRadius: radius.small, backgroundColor: colors.brand.blueSoft, alignItems: 'center', justifyContent: 'center' },
+  quickLabel: { flex: 1, minWidth: 0 },
 });

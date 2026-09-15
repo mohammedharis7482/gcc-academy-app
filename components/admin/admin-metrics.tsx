@@ -27,7 +27,7 @@ export function MetricGrid({ metrics }: { readonly metrics: readonly { readonly 
 function MetricTile({ icon, label, value, supporting, tone = 'brand' }: { readonly icon: IconName; readonly label: string; readonly value: string; readonly supporting: string; readonly tone?: 'brand' | 'success' | 'warning' | 'error' }) {
   const accent = tone === 'success' ? colors.status.success : tone === 'warning' ? colors.status.warning : tone === 'error' ? colors.status.error : colors.brand.blue;
   const surface = tone === 'success' ? colors.status.successSoft : tone === 'warning' ? colors.status.warningSoft : tone === 'error' ? colors.status.errorSoft : colors.brand.blueSoft;
-  return <View accessibilityLabel={`${label}: ${value}. ${supporting}`} style={styles.tile}><View style={[styles.tileIcon, { backgroundColor: surface }]}><MaterialCommunityIcons name={icon} size={19} color={accent} /></View><AppText variant="title" weight="extraBold" numberOfLines={1}>{value}</AppText><AppText variant="caption" weight="bold" color={colors.neutral.textSecondary} numberOfLines={1}>{label}</AppText><AppText variant="caption" color={colors.neutral.textMuted} numberOfLines={2}>{supporting}</AppText></View>;
+  return <View accessibilityLabel={`${label}: ${value}. ${supporting}`} style={styles.tile}><View style={styles.tileTop}><View style={[styles.tileIcon, { backgroundColor: surface }]}><MaterialCommunityIcons name={icon} size={19} color={accent} /></View><AppText variant="caption" weight="bold" color={colors.neutral.textSecondary} numberOfLines={2} style={styles.grow}>{label}</AppText></View><AppText variant="title" weight="extraBold" numberOfLines={1}>{value}</AppText><AppText variant="caption" color={colors.neutral.textMuted} numberOfLines={2}>{supporting}</AppText></View>;
 }
 
 export function CollectionCard({ summary, actionLabel, onAction }: { readonly summary: AdminCollectionSummary; readonly actionLabel?: string; readonly onAction?: () => void }) {
@@ -49,7 +49,8 @@ const styles = StyleSheet.create({
   grow: { flex: 1, minWidth: 0 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: adminLayout.metricGridGap },
   tile: { ...shadows.card, flexGrow: 1, flexBasis: '46%', minWidth: 148, minHeight: adminLayout.metricCardMinHeight, padding: adminLayout.cardPadding, borderWidth: 1, borderColor: colors.neutral.border, borderRadius: radius.compact, backgroundColor: colors.neutral.surface, gap: 2 },
-  tileIcon: { width: layout.compactIconSize, height: layout.compactIconSize, marginBottom: 4, borderRadius: radius.small, alignItems: 'center', justifyContent: 'center' },
+  tileTop: { minHeight: layout.compactIconSize, flexDirection: 'row', alignItems: 'center', gap: 6 },
+  tileIcon: { width: layout.compactIconSize, height: layout.compactIconSize, flexShrink: 0, borderRadius: radius.small, alignItems: 'center', justifyContent: 'center' },
   collection: { ...shadows.card, padding: adminLayout.cardPadding, borderWidth: 1, borderColor: colors.neutral.border, borderRadius: radius.standard, backgroundColor: colors.neutral.surface, gap: spacing.sm },
   collectionTop: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
   rate: { alignItems: 'flex-end' },

@@ -2,6 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { AdminShowMore } from '@/components/admin/admin-disclosure';
 import { MemberListCard } from '@/components/admin/admin-member-cards';
 import { SquadCard } from '@/components/admin/admin-squad-cards';
 import { AdminDetailSkeleton } from '@/components/admin/admin-states';
@@ -18,6 +19,7 @@ import { SquadStatus } from '@/types/admin';
 import { formatCurrency } from '@/utils/format';
 import { useSingleNavigation } from '@/hooks/use-single-navigation';
 
+const rosterPreviewCount = 6;
 const statuses = ['open', 'full', 'paused'] as const satisfies readonly SquadStatus[];
 const statusLabels: Readonly<Record<SquadStatus, string>> = { open: 'Open for enrolment', full: 'Full', paused: 'Paused' };
 function normalize(value: string | string[] | undefined) { const item = Array.isArray(value) ? value[0] : value; return item?.trim() || undefined; }
@@ -31,6 +33,7 @@ export default function AdminSquadDetailScreen() {
   const savingRef = useRef(false);
   const [sheet, setSheet] = useState<'coach' | 'status' | null>(null);
   const [error, setError] = useState<string>();
+  const [showAllMembers, setShowAllMembers] = useState(false);
 
   const squadId = normalize(params.squadId);
   const squad = squadId ? admin.getSquad(squadId) : undefined;
@@ -60,7 +63,7 @@ export default function AdminSquadDetailScreen() {
         <SquadCard squad={squad} memberCount={members.length} headCoachName={headCoach?.name ?? 'Unassigned'} />
         <ProfileSection title="Squad Settings"><View style={styles.form}><AppSelectRow label="Head coach" value={headCoach ? `Coach ${headCoach.name}` : 'Unassigned'} supportingText={headCoach?.roleTitle} icon="whistle-outline" disabled={admin.isSaving} onPress={() => setSheet('coach')} /><AppSelectRow label="Enrolment status" value={statusLabels[squad.status]} icon="account-group-outline" disabled={admin.isSaving} onPress={() => setSheet('status')} /></View></ProfileSection>
         <ProfileSection title="Schedule"><SurfaceCard><InfoRow icon="calendar-week" label="Training days" value={squad.trainingDays.join(', ')} /><InfoRow icon="clock-outline" label="Batch" value={squad.batch} /><InfoRow icon="map-marker-outline" label="Ground" value={squad.ground} /><InfoRow icon="cash" label="Monthly fee" value={formatCurrency(squad.monthlyFee)} /></SurfaceCard></ProfileSection>
-        <ProfileSection title={`Squad Members · ${members.length}`}>{members.length ? <View style={styles.list}>{members.map((member) => <MemberListCard key={member.id} member={member} onPress={() => navigateOnce(() => router.push({ pathname: '/(admin)/members/[memberId]', params: { memberId: member.id } }))} />)}</View> : <ContentState type="empty" icon="account-search-outline" title="No members" message="Enrol a player to fill this squad." />}</ProfileSection>
+        <ProfileSection title={`Squad Members · ${members.length}`}>{members.length ? <View style={styles.list}>{(showAllMembers ? members : members.slice(0, rosterPreviewCount)).map((member) => <MemberListCard key={member.id} member={member} onPress={() => navigateOnce(() => router.push({ pathname: '/(admin)/members/[memberId]', params: { memberId: member.id } }))} />)}<AdminShowMore testID="admin-squad-show-all-members" noun="members" expanded={showAllMembers} hiddenCount={Math.max(0, members.length - rosterPreviewCount)} onToggle={() => setShowAllMembers((value) => !value)} /></View> : <ContentState type="empty" icon="account-search-outline" title="No members" message="Enrol a player to fill this squad." />}</ProfileSection>
       </View>
     </AppScreen>
     <AppBottomSheet visible={sheet === 'coach'} title="Head coach" description="Assign the coach responsible for this squad." options={admin.coaches.map((coach) => ({ id: coach.id, label: `Coach ${coach.name}`, supportingText: `${coach.roleTitle} · ${coach.engagement}`, icon: 'whistle-outline' as const }))} selectedIds={[squad.headCoachId]} loading={admin.isSaving} onClose={() => setSheet(null)} onSelect={(id) => { setSheet(null); void save({ headCoachId: id }); }} />

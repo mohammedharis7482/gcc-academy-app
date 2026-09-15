@@ -46,7 +46,7 @@ export default function AdminOverviewScreen() {
         <AdminQuickAction testID="admin-post-announcement" icon="bullhorn-outline" label="Post Announcement" onPress={() => navigateOnce(() => router.push('/(admin)/announcement/new'))} />
         <AdminQuickAction testID="admin-manage-squads" icon="account-group-outline" label="Manage Squads" onPress={() => navigateOnce(() => router.push('/(admin)/squads'))} />
       </View></View>
-      <View><SectionHeader title="Pending Approvals" actionLabel={pending.length ? 'View all' : undefined} onAction={pending.length ? () => navigateOnce(() => router.push('/(admin)/approvals')) : undefined} actionTestID="admin-view-approvals" /><ApprovalList approvals={pending.slice(0, 2)} onOpen={() => navigateOnce(() => router.push('/(admin)/approvals'))} /></View>
+      <View><SectionHeader title="Pending Approvals" actionLabel={pending.length ? 'View all' : undefined} onAction={pending.length ? () => navigateOnce(() => router.push('/(admin)/approvals')) : undefined} actionTestID="admin-view-approvals" /><ApprovalList approvals={pending.slice(0, 1)} onOpen={() => navigateOnce(() => router.push('/(admin)/approvals'))} /></View>
       <View><SectionHeader title="Recent Activity" /><ActivityFeed activity={admin.activity.slice(0, 5)} /></View>
     </View>
   </AppScreen>;

@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { AdminShowMore } from '@/components/admin/admin-disclosure';
 import { AdminFilterChips, AdminFilterLabel, AdminSearch } from '@/components/admin/admin-filters';
 import { feeIncomeRowProps, IncomeRow, otherIncomeRowProps } from '@/components/admin/admin-finance';
 import { MetricGrid } from '@/components/admin/admin-metrics';
@@ -19,6 +20,7 @@ import { formatCurrency } from '@/utils/format';
 
 type SourceFilter = 'all' | 'fees' | 'other';
 const periodOptions = adminDemoConfig.billing.periods.map((period) => ({ value: period, label: period.replace(' 2026', '') }));
+const previewCount = 8;
 const sourceOptions = [{ value: 'all' as const, label: 'All' }, { value: 'fees' as const, label: 'Player Fees' }, { value: 'other' as const, label: 'Other Income' }];
 
 interface MoneyInRow { readonly key: string; readonly title: string; readonly subtitle: string; readonly note: string; readonly amount: number; readonly date: string; readonly icon: Parameters<typeof IncomeRow>[0]['icon'] }
@@ -29,6 +31,7 @@ export default function AdminMoneyInScreen() {
   const navigateOnce = useSingleNavigation();
   const [period, setPeriod] = useState<AdminBillingPeriod>(adminDemoConfig.billing.currentPeriod);
   const [source, setSource] = useState<SourceFilter>('all');
+  const [showAll, setShowAll] = useState(false);
   const [query, setQuery] = useState('');
 
   const summary = useMemo(() => admin.getMoneySummary(period), [admin, period]);
@@ -48,7 +51,7 @@ export default function AdminMoneyInScreen() {
   return <AppScreen withTabBarClearance={false}>
     <SubpageHeader title="Money In" subtitle="Player fees and other academy income" onBack={back} actionLabel="Add income" actionAccessibilityLabel="Add other academy income" onAction={() => navigateOnce(() => router.push('/(admin)/finance/new-income'))} />
     <View style={styles.sections}>
-      <View><AdminFilterLabel label="Period" /><AdminFilterChips options={periodOptions} selected={period} onSelect={setPeriod} label="Period" testIDPrefix="admin-money-in-period" /></View>
+      <View><AdminFilterLabel label="Period" /><AdminFilterChips options={periodOptions} selected={period} onSelect={(value) => { setPeriod(value); setShowAll(false); }} label="Period" testIDPrefix="admin-money-in-period" /></View>
       <MetricGrid metrics={[
         { id: 'in', icon: 'cash-plus', label: 'Money In', value: formatCurrency(summary.moneyIn), supporting: `${summary.incomeCount} records`, tone: 'success' },
         { id: 'fees', icon: 'account-cash-outline', label: 'Player fees', value: formatCurrency(summary.feeIncome), supporting: 'Fees collected this period' },
@@ -57,9 +60,9 @@ export default function AdminMoneyInScreen() {
       ]} />
       <View style={styles.controls}>
         <AdminSearch testID="admin-income-search" query={query} onChange={setQuery} placeholder="Search source, category or note" accessibilityLabel="Search money in by source, category, or note" />
-        <View><AdminFilterLabel label="Source" /><AdminFilterChips options={sourceOptions} selected={source} onSelect={setSource} label="Source" testIDPrefix="admin-money-in-source" /></View>
+        <View><AdminFilterLabel label="Source" /><AdminFilterChips options={sourceOptions} selected={source} onSelect={(value) => { setSource(value); setShowAll(false); }} label="Source" testIDPrefix="admin-money-in-source" /></View>
       </View>
-      <ProfileSection title={`Records · ${rows.length}`}>{rows.length ? <View style={styles.list}>{rows.map((row) => <IncomeRow key={row.key} title={row.title} subtitle={row.subtitle} note={row.note} amount={row.amount} date={row.date} icon={row.icon} />)}</View> : <ContentState type="empty" icon="cash-plus" title="No money in" message="No income matches the selected filters." />}</ProfileSection>
+      <ProfileSection title={`Records · ${rows.length}`}>{rows.length ? <View style={styles.list}>{(showAll ? rows : rows.slice(0, previewCount)).map((row) => <IncomeRow key={row.key} title={row.title} subtitle={row.subtitle} note={row.note} amount={row.amount} date={row.date} icon={row.icon} />)}<AdminShowMore testID="admin-money-in-show-all" expanded={showAll} hiddenCount={Math.max(0, rows.length - previewCount)} onToggle={() => setShowAll((value) => !value)} /></View> : <ContentState type="empty" icon="cash-plus" title="No money in" message="No income matches the selected filters." />}</ProfileSection>
       <AppButton testID="admin-money-in-add" label="Add Income" onPress={() => navigateOnce(() => router.push('/(admin)/finance/new-income'))} accessibilityLabel="Add other academy income" />
     </View>
   </AppScreen>;
