@@ -14,7 +14,7 @@ import { formatCurrency } from '@/utils/format';
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
 const approvalIcons: Readonly<Record<ApprovalKind, IconName>> = { enrolment: 'account-plus-outline', 'squad-transfer': 'swap-horizontal', 'fee-concession': 'cash-minus', 'coach-leave': 'calendar-account-outline' };
-const activityIcons: Readonly<Record<AdminActivityKind, IconName>> = { payment: 'cash-check', enrolment: 'account-plus-outline', approval: 'clipboard-check-outline', announcement: 'bullhorn-outline', coach: 'whistle-outline', squad: 'account-group-outline' };
+const activityIcons: Readonly<Record<AdminActivityKind, IconName>> = { payment: 'cash-check', enrolment: 'account-plus-outline', approval: 'clipboard-check-outline', announcement: 'bullhorn-outline', coach: 'whistle-outline', squad: 'account-group-outline', expense: 'cash-minus', income: 'cash-plus' };
 
 export function AdminQuickAction({ icon, label, onPress, testID }: { readonly icon: IconName; readonly label: string; readonly onPress: () => void; readonly testID: string }) {
   return <AnimatedPressable testID={testID} accessibilityRole="button" accessibilityLabel={label} onPress={onPress} pressedScale={motion.scale.pressStrong} style={styles.quickAction}><View style={styles.quickIcon}><MaterialCommunityIcons name={icon} size={22} color={colors.brand.navy} /></View><View style={styles.quickLabelWrap}><AppText variant="button" weight="bold" numberOfLines={2} style={styles.quickLabel}>{label}</AppText></View><View style={styles.quickArrow}><MaterialCommunityIcons name="arrow-top-right" size={18} color={colors.brand.blue} /></View></AnimatedPressable>;

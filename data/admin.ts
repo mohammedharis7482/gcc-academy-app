@@ -2,7 +2,7 @@ import { adminDemoConfig } from '@/config/admin';
 import { demoConfig } from '@/config/demo';
 import { sharedAcademyData } from '@/data/academy';
 import { AcademyPlayer, AgeCategory } from '@/types/academy';
-import { AdminAcademyProfile, AdminActivityEntry, AdminApproval, AdminCoach, AdminCollectionSummary, AdminDirectory, AdminFeeRecord, AdminFeeStatus, AdminMember, AdminOverview, AdminSquad, AdminSquadReport, EnrolmentStatus } from '@/types/admin';
+import { AdminAcademyProfile, AdminActivityEntry, AdminApproval, AdminCoach, AdminCoachSalary, AdminCollectionSummary, AdminDirectory, AdminExpense, AdminExpenseBreakdownRow, AdminFeeRecord, AdminFeeStatus, AdminIncome, AdminMember, AdminMoneySummary, AdminOverview, AdminSquad, AdminSquadReport, EnrolmentStatus, ExpenseCategory } from '@/types/admin';
 
 const guardianFirstNames = ['Mohammed', 'Suresh', 'Ranjith', 'Fathima', 'Anil', 'Shiny', 'Basheer', 'Latha', 'Noushad', 'Geetha'] as const;
 const relationships = ['Father', 'Mother', 'Father', 'Guardian', 'Mother'] as const;
@@ -104,11 +104,11 @@ function buildFeeRecords(members: readonly AdminMember[]): readonly AdminFeeReco
 }
 
 const seedCoaches: readonly AdminCoach[] = [
-  { id: 'coach-sandeep', name: 'Sandeep', roleTitle: 'Technical Coach', engagement: 'Full-time', availability: 'available', squadIds: ['u13'], phoneMasked: '+91 98XXXXXX10', email: 'sandeep@gccacademy.in', certification: 'AIFF D Licence', joinedOn: '12 January 2022', sessionsThisMonth: 14, source: 'seed' },
-  { id: 'coach-junaid', name: 'Junaid', roleTitle: 'Foundation Coach', engagement: 'Full-time', availability: 'available', squadIds: ['u10', 'u13'], phoneMasked: '+91 97XXXXXX44', email: 'junaid@gccacademy.in', certification: 'AIFF D Licence', joinedOn: '3 June 2022', sessionsThisMonth: 16, source: 'seed' },
-  { id: 'coach-ramshad', name: 'Ramshad', roleTitle: 'Performance Coach', engagement: 'Full-time', availability: 'available', squadIds: ['u15'], phoneMasked: '+91 95XXXXXX21', email: 'ramshad@gccacademy.in', certification: 'AIFF C Licence', joinedOn: '20 August 2021', sessionsThisMonth: 13, source: 'seed' },
-  { id: 'coach-ashil', name: 'Ashil', roleTitle: 'Assistant Coach', engagement: 'Part-time', availability: 'available', squadIds: ['u13'], phoneMasked: '+91 99XXXXXX07', email: 'ashil@gccacademy.in', certification: 'Grassroots Leader', joinedOn: '14 February 2024', sessionsThisMonth: 8, source: 'seed' },
-  { id: 'coach-nithin', name: 'Nithin', roleTitle: 'Goalkeeping Coach', engagement: 'Guest', availability: 'on-leave', squadIds: ['u13', 'u15'], phoneMasked: '+91 90XXXXXX63', email: 'nithin@gccacademy.in', certification: 'Goalkeeping Level 1', joinedOn: '9 September 2025', sessionsThisMonth: 4, source: 'seed' },
+  { id: 'coach-sandeep', name: 'Sandeep', roleTitle: 'Technical Coach', engagement: 'Full-time', availability: 'available', squadIds: ['u13'], phoneMasked: '+91 98XXXXXX10', email: 'sandeep@gccacademy.in', certification: 'AIFF D Licence', joinedOn: '12 January 2022', sessionsThisMonth: 14, monthlySalary: 16000, source: 'seed' },
+  { id: 'coach-junaid', name: 'Junaid', roleTitle: 'Foundation Coach', engagement: 'Full-time', availability: 'available', squadIds: ['u10', 'u13'], phoneMasked: '+91 97XXXXXX44', email: 'junaid@gccacademy.in', certification: 'AIFF D Licence', joinedOn: '3 June 2022', sessionsThisMonth: 16, monthlySalary: 14000, source: 'seed' },
+  { id: 'coach-ramshad', name: 'Ramshad', roleTitle: 'Performance Coach', engagement: 'Full-time', availability: 'available', squadIds: ['u15'], phoneMasked: '+91 95XXXXXX21', email: 'ramshad@gccacademy.in', certification: 'AIFF C Licence', joinedOn: '20 August 2021', sessionsThisMonth: 13, monthlySalary: 15000, source: 'seed' },
+  { id: 'coach-ashil', name: 'Ashil', roleTitle: 'Assistant Coach', engagement: 'Part-time', availability: 'available', squadIds: ['u13'], phoneMasked: '+91 99XXXXXX07', email: 'ashil@gccacademy.in', certification: 'Grassroots Leader', joinedOn: '14 February 2024', sessionsThisMonth: 8, monthlySalary: 7000, source: 'seed' },
+  { id: 'coach-nithin', name: 'Nithin', roleTitle: 'Goalkeeping Coach', engagement: 'Guest', availability: 'on-leave', squadIds: ['u13', 'u15'], phoneMasked: '+91 90XXXXXX63', email: 'nithin@gccacademy.in', certification: 'Goalkeeping Level 1', joinedOn: '9 September 2025', sessionsThisMonth: 4, monthlySalary: 4000, source: 'seed' },
 ];
 
 const seedSquads: readonly AdminSquad[] = sharedAcademyData.squads.map((squad) => ({
@@ -124,6 +124,68 @@ const seedSquads: readonly AdminSquad[] = sharedAcademyData.squads.map((squad) =
   monthlyFee: monthlyFeeFor(squad.ageCategory),
   status: squad.playerCount >= adminDemoConfig.squadCapacity ? 'full' : 'open',
 }));
+
+const salaryByCoach: Readonly<Record<string, number>> = Object.fromEntries(seedCoaches.map((coach) => [coach.id, coach.monthlySalary]));
+
+/** Coach Salary expenses for a settled period, one per coach. */
+function seedSalaryExpenses(period: string, day: number): readonly AdminExpense[] {
+  return seedCoaches.map((coach) => ({
+    id: `expense-salary-${coach.id}-${period.split(' ')[0].toLowerCase()}`,
+    category: 'Coach Salary' as const,
+    amount: salaryByCoach[coach.id],
+    date: `${day} ${period}`,
+    period,
+    paidTo: `Coach ${coach.name}`,
+    method: 'Bank Transfer' as const,
+    note: `${period} salary`,
+    recordedBy: adminDemoConfig.admin.name,
+    coachId: coach.id,
+    source: 'seed' as const,
+  }));
+}
+
+/**
+ * Money out. July coach salaries are deliberately absent so the Coach Salaries
+ * screen has pending work; May and June are fully settled.
+ */
+const seedExpenses: readonly AdminExpense[] = [
+  { id: 'expense-rent-july', category: 'Ground Rent', amount: 18000, date: '2 July 2026', period: 'July 2026', paidTo: 'GCC Football Ground', method: 'Bank Transfer', note: 'July ground rent', recordedBy: adminDemoConfig.admin.name, source: 'seed' },
+  { id: 'expense-equipment-july', category: 'Equipment', amount: 6400, date: '4 July 2026', period: 'July 2026', paidTo: 'Kerala Sports Depot', method: 'UPI', note: 'Match balls and training bibs', recordedBy: adminDemoConfig.admin.name, source: 'seed' },
+  { id: 'expense-office-july', category: 'Office', amount: 1800, date: '3 July 2026', period: 'July 2026', paidTo: 'Chalissery Stationers', method: 'Cash', note: 'Registration forms and printing', recordedBy: adminDemoConfig.admin.name, source: 'seed' },
+  { id: 'expense-maintenance-july', category: 'Maintenance', amount: 3200, date: '6 July 2026', period: 'July 2026', paidTo: 'Turf Care Services', method: 'Cash', note: 'Pitch line marking and net repair', recordedBy: adminDemoConfig.admin.name, source: 'seed' },
+  { id: 'expense-transport-july', category: 'Transportation', amount: 2600, date: '8 July 2026', period: 'July 2026', paidTo: 'Safar Travels', method: 'Cash', note: 'U15 away friendly travel', recordedBy: adminDemoConfig.admin.name, source: 'seed' },
+
+  ...seedSalaryExpenses('June 2026', 30),
+  { id: 'expense-rent-june', category: 'Ground Rent', amount: 18000, date: '2 June 2026', period: 'June 2026', paidTo: 'GCC Football Ground', method: 'Bank Transfer', note: 'June ground rent', recordedBy: adminDemoConfig.admin.name, source: 'seed' },
+  { id: 'expense-equipment-june', category: 'Equipment', amount: 4200, date: '9 June 2026', period: 'June 2026', paidTo: 'Kerala Sports Depot', method: 'UPI', note: 'Goalkeeper gloves and cones', recordedBy: adminDemoConfig.admin.name, source: 'seed' },
+  { id: 'expense-tournament-june', category: 'Tournament', amount: 7500, date: '14 June 2026', period: 'June 2026', paidTo: 'District Football Association', method: 'Bank Transfer', note: 'U15 district league entry', recordedBy: adminDemoConfig.admin.name, source: 'seed' },
+  { id: 'expense-marketing-june', category: 'Marketing', amount: 2400, date: '18 June 2026', period: 'June 2026', paidTo: 'Palakkad Print House', method: 'UPI', note: 'Trial camp posters', recordedBy: adminDemoConfig.admin.name, source: 'seed' },
+  { id: 'expense-maintenance-june', category: 'Maintenance', amount: 2900, date: '22 June 2026', period: 'June 2026', paidTo: 'Turf Care Services', method: 'Cash', note: 'Drainage clearing before monsoon', recordedBy: adminDemoConfig.admin.name, source: 'seed' },
+
+  ...seedSalaryExpenses('May 2026', 31),
+  { id: 'expense-rent-may', category: 'Ground Rent', amount: 18000, date: '2 May 2026', period: 'May 2026', paidTo: 'GCC Football Ground', method: 'Bank Transfer', note: 'May ground rent', recordedBy: adminDemoConfig.admin.name, source: 'seed' },
+  { id: 'expense-events-may', category: 'Events', amount: 5600, date: '17 May 2026', period: 'May 2026', paidTo: 'Chalissery Community Hall', method: 'Cash', note: 'Parents open day', recordedBy: adminDemoConfig.admin.name, source: 'seed' },
+  { id: 'expense-equipment-may', category: 'Equipment', amount: 3100, date: '11 May 2026', period: 'May 2026', paidTo: 'Kerala Sports Depot', method: 'UPI', note: 'Training vests', recordedBy: adminDemoConfig.admin.name, source: 'seed' },
+  { id: 'expense-office-may', category: 'Office', amount: 1500, date: '5 May 2026', period: 'May 2026', paidTo: 'Chalissery Stationers', method: 'Cash', note: 'Attendance registers', recordedBy: adminDemoConfig.admin.name, source: 'seed' },
+  { id: 'expense-transport-may', category: 'Transportation', amount: 2200, date: '24 May 2026', period: 'May 2026', paidTo: 'Safar Travels', method: 'Cash', note: 'U13 friendly travel', recordedBy: adminDemoConfig.admin.name, source: 'seed' },
+];
+
+/** Money in that is not a player fee. */
+const seedIncomes: readonly AdminIncome[] = [
+  { id: 'income-sponsorship-july', category: 'Sponsorship', amount: 18000, date: '1 July 2026', period: 'July 2026', receivedFrom: 'Chalissery Sports Hub', method: 'Bank Transfer', note: 'Quarterly kit sponsorship', recordedBy: adminDemoConfig.admin.name, source: 'seed' },
+  { id: 'income-camp-july', category: 'Camp Fees', amount: 12000, date: '5 July 2026', period: 'July 2026', receivedFrom: 'Summer camp batch 2', method: 'UPI', note: '8 camp participants', recordedBy: adminDemoConfig.admin.name, source: 'seed' },
+  { id: 'income-tournament-july', category: 'Tournament Fees', amount: 6000, date: '7 July 2026', period: 'July 2026', receivedFrom: 'Monsoon Cup entries', method: 'Cash', note: 'U13 and U15 squad entries', recordedBy: adminDemoConfig.admin.name, source: 'seed' },
+  { id: 'income-merch-july', category: 'Merchandise', amount: 4500, date: '9 July 2026', period: 'July 2026', receivedFrom: 'Academy jersey sales', method: 'Cash', note: '15 training jerseys', recordedBy: adminDemoConfig.admin.name, source: 'seed' },
+
+  { id: 'income-camp-june', category: 'Camp Fees', amount: 18000, date: '6 June 2026', period: 'June 2026', receivedFrom: 'Summer camp batch 1', method: 'UPI', note: '12 camp participants', recordedBy: adminDemoConfig.admin.name, source: 'seed' },
+  { id: 'income-sponsorship-june', category: 'Sponsorship', amount: 15000, date: '1 June 2026', period: 'June 2026', receivedFrom: 'Chalissery Sports Hub', method: 'Bank Transfer', note: 'Monthly ground board sponsorship', recordedBy: adminDemoConfig.admin.name, source: 'seed' },
+  { id: 'income-tournament-june', category: 'Tournament Fees', amount: 5500, date: '13 June 2026', period: 'June 2026', receivedFrom: 'District league entries', method: 'Bank Transfer', note: 'Reimbursed squad entries', recordedBy: adminDemoConfig.admin.name, source: 'seed' },
+  { id: 'income-merch-june', category: 'Merchandise', amount: 3200, date: '20 June 2026', period: 'June 2026', receivedFrom: 'Academy jersey sales', method: 'Cash', note: '11 training jerseys', recordedBy: adminDemoConfig.admin.name, source: 'seed' },
+
+  { id: 'income-sponsorship-may', category: 'Sponsorship', amount: 15000, date: '2 May 2026', period: 'May 2026', receivedFrom: 'Chalissery Sports Hub', method: 'Bank Transfer', note: 'Monthly ground board sponsorship', recordedBy: adminDemoConfig.admin.name, source: 'seed' },
+  { id: 'income-camp-may', category: 'Camp Fees', amount: 9500, date: '19 May 2026', period: 'May 2026', receivedFrom: 'Skills clinic', method: 'UPI', note: '7 clinic participants', recordedBy: adminDemoConfig.admin.name, source: 'seed' },
+  { id: 'income-merch-may', category: 'Merchandise', amount: 2800, date: '26 May 2026', period: 'May 2026', receivedFrom: 'Academy jersey sales', method: 'Cash', note: '9 training jerseys', recordedBy: adminDemoConfig.admin.name, source: 'seed' },
+];
 
 const seedApprovals: readonly AdminApproval[] = [
   { id: 'approval-enrolment-noel', kind: 'enrolment', title: 'Confirm U10 enrolment', summary: 'Noel James has completed the two-week trial and requests a full Foundation membership.', requestedBy: 'Coach Junaid', requestedOn: '10 July 2026', memberId: 'player-u10-19', amount: monthlyFeeFor('U10') },
@@ -158,6 +220,8 @@ export const seedAdminDirectory: AdminDirectory = {
   coaches: seedCoaches,
   squads: seedSquads,
   feeRecords: buildFeeRecords(seedMembers),
+  expenses: seedExpenses,
+  incomes: seedIncomes,
   approvals: seedApprovals,
   activity: seedActivity,
 };
@@ -229,4 +293,63 @@ export function buildSquadReports(members: readonly AdminMember[], squads: reado
       outstandingAmount: billed - collected,
     };
   });
+}
+
+/** Money In, Money Out, and Net for one period. Money In counts fees actually collected. */
+export function buildMoneySummary(feeRecords: readonly AdminFeeRecord[], incomes: readonly AdminIncome[], expenses: readonly AdminExpense[], period: string): AdminMoneySummary {
+  const collectedFees = feeRecords.filter((record) => record.period === period && record.status === 'paid');
+  const periodIncomes = incomes.filter((income) => income.period === period);
+  const periodExpenses = expenses.filter((expense) => expense.period === period);
+  const feeIncome = collectedFees.reduce((total, record) => total + record.amount, 0);
+  const otherIncome = periodIncomes.reduce((total, income) => total + income.amount, 0);
+  const moneyOut = periodExpenses.reduce((total, expense) => total + expense.amount, 0);
+  const moneyIn = feeIncome + otherIncome;
+  return {
+    period,
+    moneyIn,
+    feeIncome,
+    otherIncome,
+    moneyOut,
+    net: moneyIn - moneyOut,
+    incomeCount: collectedFees.length + periodIncomes.length,
+    expenseCount: periodExpenses.length,
+  };
+}
+
+export function buildExpenseBreakdown(expenses: readonly AdminExpense[], period: string): readonly AdminExpenseBreakdownRow[] {
+  const periodExpenses = expenses.filter((expense) => expense.period === period);
+  const total = periodExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+  const byCategory = new Map<ExpenseCategory, { amount: number; count: number }>();
+  periodExpenses.forEach((expense) => {
+    const current = byCategory.get(expense.category) ?? { amount: 0, count: 0 };
+    byCategory.set(expense.category, { amount: current.amount + expense.amount, count: current.count + 1 });
+  });
+  return [...byCategory.entries()]
+    .map<AdminExpenseBreakdownRow>(([category, entry]) => ({ category, amount: entry.amount, count: entry.count, share: total ? Math.round((entry.amount / total) * 100) : 0 }))
+    .sort((a, b) => b.amount - a.amount);
+}
+
+/** A salary is paid when a Coach Salary expense exists for that coach and period. */
+export function buildCoachSalaries(coaches: readonly AdminCoach[], expenses: readonly AdminExpense[], period: string): readonly AdminCoachSalary[] {
+  return coaches.map<AdminCoachSalary>((coach) => {
+    const expense = expenses.find((item) => item.category === 'Coach Salary' && item.coachId === coach.id && item.period === period);
+    return {
+      coachId: coach.id,
+      coachName: coach.name,
+      roleTitle: coach.roleTitle,
+      engagement: coach.engagement,
+      period,
+      amount: expense?.amount ?? coach.monthlySalary,
+      status: expense ? 'paid' : 'pending',
+      paidOn: expense?.date,
+      method: expense?.method,
+      expenseId: expense?.id,
+    };
+  });
+}
+
+export function searchAdminExpenses(expenses: readonly AdminExpense[], query: string): readonly AdminExpense[] {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) return expenses;
+  return expenses.filter((expense) => expense.paidTo.toLowerCase().includes(normalized) || expense.category.toLowerCase().includes(normalized) || expense.note.toLowerCase().includes(normalized));
 }

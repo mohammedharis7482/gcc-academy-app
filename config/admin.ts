@@ -27,6 +27,8 @@ export const adminDemoConfig = {
     monthlyFeeByCategory: { U10: 1000, U13: demoConfig.player.feeAmount, U15: 1400 },
   },
   squadCapacity: 24,
+  /** Monthly coach salary defaults used when an admin adds a new coach. */
+  salaryByEngagement: { 'Full-time': 14000, 'Part-time': 7000, Guest: 4000 },
 } as const;
 
 export type AdminBillingPeriod = (typeof adminDemoConfig.billing.periods)[number];

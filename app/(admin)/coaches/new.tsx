@@ -14,6 +14,8 @@ import { useToast } from '@/components/states/success-toast';
 import { useAdminData } from '@/contexts/admin-data-context';
 import { adminLayout } from '@/design/tokens/admin';
 import { CoachEngagement } from '@/types/admin';
+import { adminDemoConfig } from '@/config/admin';
+import { formatCurrency } from '@/utils/format';
 
 const engagements = ['Full-time', 'Part-time', 'Guest'] as const satisfies readonly CoachEngagement[];
 const roleTitles = ['Technical Coach', 'Foundation Coach', 'Performance Coach', 'Assistant Coach', 'Goalkeeping Coach'] as const;
@@ -26,6 +28,7 @@ export default function NewCoachRoute() {
   const [name, setName] = useState('');
   const [roleTitle, setRoleTitle] = useState<(typeof roleTitles)[number]>('Assistant Coach');
   const [engagement, setEngagement] = useState<CoachEngagement>('Part-time');
+  const [salary, setSalary] = useState(String(adminDemoConfig.salaryByEngagement['Part-time']));
   const [squadIds, setSquadIds] = useState<readonly string[]>([]);
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -39,12 +42,14 @@ export default function NewCoachRoute() {
   const save = async () => {
     if (savingRef.current) return;
     if (!name.trim()) { setError('Enter the coach name.'); return; }
+    const monthlySalary = Number(salary);
+    if (!Number.isFinite(monthlySalary) || monthlySalary <= 0) { setError('Enter a monthly salary greater than zero.'); return; }
     if (!squadIds.length) { setError('Assign at least one squad to this coach.'); return; }
     if (phone.replace(/\D/g, '').length < 10) { setError('Enter a valid contact number.'); return; }
     if (!email.includes('@')) { setError('Enter a valid email address.'); return; }
     savingRef.current = true;
     try {
-      const result = await admin.addCoach({ name, roleTitle, engagement, availability: 'available', squadIds, phoneMasked: phone.trim(), email: email.trim().toLowerCase(), certification: certification.trim() || 'Pending verification' });
+      const result = await admin.addCoach({ name, roleTitle, engagement, monthlySalary, availability: 'available', squadIds, phoneMasked: phone.trim(), email: email.trim().toLowerCase(), certification: certification.trim() || 'Pending verification' });
       if (!result.value) { setError(result.error ?? 'Unable to add this coach.'); return; }
       showSuccess('Coach added', `${result.value.name} is now listed in the coaching staff.`);
       back();
@@ -58,8 +63,8 @@ export default function NewCoachRoute() {
         {error ? <InlineInfoBanner tone="error" title="Check the coach details" message={error} actionLabel="Dismiss" onAction={() => setError(undefined)} /> : null}
         <AdminField title="Coach name"><AppTextInput testID="admin-coach-name" value={name} onChangeText={(value) => { setName(value.slice(0, 60)); setError(undefined); }} maxLength={60} placeholder="Full name" accessibilityLabel="Coach name" returnKeyType="next" error={error === 'Enter the coach name.'} /></AdminField>
         <AppSelectRow label="Role" value={roleTitle} icon="whistle-outline" disabled={admin.isSaving} onPress={() => setSheet('role')} />
-        <AdminField title="Engagement"><AdminChoiceChips values={engagements} selected={engagement} onSelect={setEngagement} label="Engagement" disabled={admin.isSaving} /></AdminField>
-        <AppSelectRow label="Assigned squads" value={squadSummary} supportingText="A coach can cover more than one squad" icon="account-group-outline" error={error === 'Assign at least one squad to this coach.'} disabled={admin.isSaving} onPress={() => setSheet('squads')} />
+        <AdminField title="Engagement"><AdminChoiceChips values={engagements} selected={engagement} onSelect={(value) => { setEngagement(value); setSalary(String(adminDemoConfig.salaryByEngagement[value])); setError(undefined); }} label="Engagement" disabled={admin.isSaving} /></AdminField>
+        <AdminField title="Monthly salary" supporting={`Money Out records ${formatCurrency(Number(salary) || 0)} each month this coach is paid`}><AppTextInput testID="admin-coach-salary" value={salary} onChangeText={(value) => { setSalary(value.replace(/\D/g, '').slice(0, 7)); setError(undefined); }} keyboardType="number-pad" maxLength={7} placeholder="Amount in rupees" accessibilityLabel="Monthly salary" error={error === 'Enter a monthly salary greater than zero.'} /></AdminField><AppSelectRow label="Assigned squads" value={squadSummary} supportingText="A coach can cover more than one squad" icon="account-group-outline" error={error === 'Assign at least one squad to this coach.'} disabled={admin.isSaving} onPress={() => setSheet('squads')} />
         <AdminField title="Contact number"><AppTextInput testID="admin-coach-phone" value={phone} onChangeText={(value) => { setPhone(value.slice(0, 16)); setError(undefined); }} keyboardType="phone-pad" maxLength={16} placeholder="+91 XXXXX XXXXX" accessibilityLabel="Coach contact number" error={error === 'Enter a valid contact number.'} /></AdminField>
         <AdminField title="Email"><AppTextInput testID="admin-coach-email" value={email} onChangeText={(value) => { setEmail(value.slice(0, 60)); setError(undefined); }} keyboardType="email-address" autoCapitalize="none" maxLength={60} placeholder="name@gccacademy.in" accessibilityLabel="Coach email address" error={error === 'Enter a valid email address.'} /></AdminField>
         <AdminField title="Certification" supporting="Optional — recorded for academy compliance"><AppTextInput testID="admin-coach-certification" value={certification} onChangeText={(value) => setCertification(value.slice(0, 48))} maxLength={48} placeholder="AIFF D Licence" accessibilityLabel="Coach certification" /></AdminField>

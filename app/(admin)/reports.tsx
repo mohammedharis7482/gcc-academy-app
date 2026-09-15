@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { AdminFilterChips, AdminFilterLabel } from '@/components/admin/admin-filters';
-import { SquadCollectionReport } from '@/components/admin/admin-finance';
+import { ExpenseBreakdownCard, SquadCollectionReport } from '@/components/admin/admin-finance';
 import { MetricGrid } from '@/components/admin/admin-metrics';
 import { AdminDetailSkeleton } from '@/components/admin/admin-states';
 import { AppScreen } from '@/components/common/app-screen';
@@ -27,6 +27,8 @@ export default function AdminReportsScreen() {
 
   const summary = useMemo(() => admin.getCollectionSummary(period), [admin, period]);
   const reports = useMemo(() => admin.getSquadReports(period), [admin, period]);
+  const money = useMemo(() => admin.getMoneySummary(period), [admin, period]);
+  const breakdown = useMemo(() => admin.getExpenseBreakdown(period), [admin, period]);
   const enrolmentSplit = useMemo(() => [
     { label: 'Active', count: admin.overview.activeMembers, tone: colors.status.success },
     { label: 'Trial', count: admin.overview.trialMembers, tone: colors.status.info },
@@ -47,6 +49,12 @@ export default function AdminReportsScreen() {
         { id: 'outstanding', icon: 'cash-clock', label: 'Outstanding', value: formatCurrency(summary.pending + summary.overdue), supporting: `${summary.pendingCount} pending · ${summary.overdueCount} overdue`, tone: 'warning' },
         { id: 'capacity', icon: 'account-group-outline', label: 'Capacity used', value: `${admin.overview.capacityUsedPercent}%`, supporting: `${admin.overview.totalMembers} enrolled members` },
       ]} />
+      <ProfileSection title="Money Summary"><MetricGrid metrics={[
+        { id: 'money-in', icon: 'cash-plus', label: 'Money In', value: formatCurrency(money.moneyIn), supporting: `Fees ${formatCurrency(money.feeIncome)} · Other ${formatCurrency(money.otherIncome)}`, tone: 'success' },
+        { id: 'money-out', icon: 'cash-minus', label: 'Money Out', value: formatCurrency(money.moneyOut), supporting: `${money.expenseCount} records`, tone: 'error' },
+        { id: 'net', icon: money.net >= 0 ? 'trending-up' : 'trending-down', label: 'Net', value: `${money.net < 0 ? '−' : ''}${formatCurrency(Math.abs(money.net))}`, supporting: money.net >= 0 ? 'Money In is ahead' : 'Money Out is ahead', tone: money.net >= 0 ? 'success' : 'error' },
+      ]} /></ProfileSection>
+      <ProfileSection title="Money Out by Category"><ExpenseBreakdownCard breakdown={breakdown} /></ProfileSection>
       <ProfileSection title="Squad Performance"><SquadCollectionReport reports={reports} /></ProfileSection>
       <ProfileSection title="Enrolment Mix"><View style={styles.card}>{enrolmentSplit.map((item) => <View key={item.label} style={styles.splitRow}><View style={styles.splitTop}><AppText variant="bodySmall" weight="bold" style={styles.grow}>{item.label}</AppText><AppText variant="bodySmall" weight="extraBold" color={item.tone}>{item.count}</AppText></View><ProgressBar progress={totalSplit ? item.count / totalSplit : 0} color={item.tone} accessibilityLabel={`${item.label}: ${item.count} members`} /></View>)}</View></ProfileSection>
       <ProfileSection title="Squad Attendance"><View style={styles.card}>{reports.map((report) => <View key={report.squadId} style={styles.splitRow}><View style={styles.splitTop}><AppText variant="bodySmall" weight="bold" numberOfLines={1} style={styles.grow}>{report.squadName}</AppText><AppText variant="bodySmall" weight="extraBold" color={report.averageAttendance >= 85 ? colors.status.success : colors.status.warning}>{report.averageAttendance}%</AppText></View><ProgressBar progress={report.averageAttendance / 100} color={report.averageAttendance >= 85 ? colors.status.success : colors.status.warning} accessibilityLabel={`${report.squadName} attendance ${report.averageAttendance} percent`} /></View>)}</View></ProfileSection>

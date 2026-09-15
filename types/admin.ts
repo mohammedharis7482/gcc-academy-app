@@ -8,9 +8,12 @@ export type CoachAvailability = 'available' | 'on-leave';
 export type SquadStatus = 'open' | 'full' | 'paused';
 export type ApprovalKind = 'enrolment' | 'squad-transfer' | 'fee-concession' | 'coach-leave';
 export type ApprovalState = 'pending' | 'approved' | 'declined';
-export type AdminActivityKind = 'payment' | 'enrolment' | 'approval' | 'announcement' | 'coach' | 'squad';
+export type AdminActivityKind = 'payment' | 'enrolment' | 'approval' | 'announcement' | 'coach' | 'squad' | 'expense' | 'income';
 export type AdminAnnouncementAudience = 'all-players' | 'selected-categories' | 'coaches';
 export type PaymentMethod = 'Cash' | 'Bank Transfer' | 'UPI';
+export type ExpenseCategory = 'Coach Salary' | 'Ground Rent' | 'Equipment' | 'Transportation' | 'Tournament' | 'Events' | 'Marketing' | 'Maintenance' | 'Office' | 'Other';
+export type IncomeCategory = 'Camp Fees' | 'Tournament Fees' | 'Sponsorship' | 'Merchandise' | 'Other';
+export type SalaryStatus = 'pending' | 'paid';
 
 export interface AdminSession {
   readonly schemaVersion: 1;
@@ -68,6 +71,7 @@ export interface AdminCoach {
   readonly certification: string;
   readonly joinedOn: string;
   readonly sessionsThisMonth: number;
+  readonly monthlySalary: number;
   readonly source: 'seed' | 'admin-created';
 }
 
@@ -99,6 +103,53 @@ export interface AdminFeeRecord {
   readonly paidOn?: string;
   readonly method?: PaymentMethod;
   readonly reference?: string;
+}
+
+/** Money out. A Coach Salary expense carries the `coachId` it paid. */
+export interface AdminExpense {
+  readonly id: string;
+  readonly category: ExpenseCategory;
+  readonly amount: number;
+  readonly date: string;
+  readonly period: string;
+  readonly paidTo: string;
+  readonly method: PaymentMethod;
+  readonly note: string;
+  readonly recordedBy: string;
+  readonly coachId?: string;
+  readonly source: 'seed' | 'admin-created';
+}
+
+/** Money in that is not a player fee. */
+export interface AdminIncome {
+  readonly id: string;
+  readonly category: IncomeCategory;
+  readonly amount: number;
+  readonly date: string;
+  readonly period: string;
+  readonly receivedFrom: string;
+  readonly method: PaymentMethod;
+  readonly note: string;
+  readonly recordedBy: string;
+  readonly source: 'seed' | 'admin-created';
+}
+
+/**
+ * A coach's salary for one period. Status is derived: a salary counts as paid
+ * when a Coach Salary expense exists for that coach and period, so the salary
+ * screen and Money Out can never disagree.
+ */
+export interface AdminCoachSalary {
+  readonly coachId: string;
+  readonly coachName: string;
+  readonly roleTitle: string;
+  readonly engagement: CoachEngagement;
+  readonly period: string;
+  readonly amount: number;
+  readonly status: SalaryStatus;
+  readonly paidOn?: string;
+  readonly method?: PaymentMethod;
+  readonly expenseId?: string;
 }
 
 export interface AdminApproval {
@@ -155,6 +206,8 @@ export interface AdminDirectory {
   readonly coaches: readonly AdminCoach[];
   readonly squads: readonly AdminSquad[];
   readonly feeRecords: readonly AdminFeeRecord[];
+  readonly expenses: readonly AdminExpense[];
+  readonly incomes: readonly AdminIncome[];
   readonly approvals: readonly AdminApproval[];
   readonly activity: readonly AdminActivityEntry[];
 }
@@ -192,6 +245,8 @@ export interface AdminOperationsPayload {
   readonly coaches: readonly AdminCoach[];
   readonly announcements: readonly AdminAnnouncementRecord[];
   readonly squadOverrides: readonly AdminSquadOverride[];
+  readonly expenses: readonly AdminExpense[];
+  readonly incomes: readonly AdminIncome[];
 }
 
 export interface AdminOverview {
@@ -217,6 +272,25 @@ export interface AdminCollectionSummary {
   readonly paidCount: number;
   readonly pendingCount: number;
   readonly overdueCount: number;
+}
+
+/** Money In, Money Out, and Net for one period, in plain language. */
+export interface AdminMoneySummary {
+  readonly period: string;
+  readonly moneyIn: number;
+  readonly feeIncome: number;
+  readonly otherIncome: number;
+  readonly moneyOut: number;
+  readonly net: number;
+  readonly incomeCount: number;
+  readonly expenseCount: number;
+}
+
+export interface AdminExpenseBreakdownRow {
+  readonly category: ExpenseCategory;
+  readonly amount: number;
+  readonly share: number;
+  readonly count: number;
 }
 
 export interface AdminSquadReport {
@@ -245,6 +319,7 @@ export interface AdminCoachInput {
   readonly name: string;
   readonly roleTitle: string;
   readonly engagement: CoachEngagement;
+  readonly monthlySalary: number;
   readonly availability: CoachAvailability;
   readonly squadIds: readonly string[];
   readonly phoneMasked: string;
@@ -256,6 +331,29 @@ export interface AdminPaymentInput {
   readonly feeId: string;
   readonly method: PaymentMethod;
   readonly reference: string;
+}
+
+export interface AdminExpenseInput {
+  readonly category: ExpenseCategory;
+  readonly amount: number;
+  readonly paidTo: string;
+  readonly method: PaymentMethod;
+  readonly note: string;
+}
+
+export interface AdminIncomeInput {
+  readonly category: IncomeCategory;
+  readonly amount: number;
+  readonly receivedFrom: string;
+  readonly method: PaymentMethod;
+  readonly note: string;
+}
+
+export interface AdminSalaryPaymentInput {
+  readonly coachId: string;
+  readonly period: string;
+  readonly method: PaymentMethod;
+  readonly note: string;
 }
 
 export interface AdminAnnouncementInput {

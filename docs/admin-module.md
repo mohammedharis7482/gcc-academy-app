@@ -65,6 +65,10 @@ app/(admin)/
   squads/index.tsx            Squad list
   squads/[squadId].tsx        Squad settings and roster
   finance/[feeId].tsx         Fee record and record-payment flow
+  finance/money-in.tsx        Money In list (player fees plus other income)
+  finance/money-out.tsx       Money Out list, filterable by category
+  finance/new-expense.tsx     Add Expense form
+  finance/salaries.tsx        Coach salary status with a Pay action
   announcement/new.tsx        Academy announcement
   approvals.tsx               Approval queue
   reports.tsx                 Academy reports
@@ -98,7 +102,7 @@ are added on top.
 | --- | --- |
 | Types | `types/admin.ts` |
 | Demo configuration | `config/admin.ts` |
-| Seed directory and selectors | `data/admin.ts` |
+| Seed directory and selectors | `data/admin.ts` (members, coaches, squads, fees, expenses, incomes) |
 | Local persistence | `utils/admin-storage.ts` (`samp.admin.operations`) |
 | Services | `services/admin-service.ts` |
 | State | `contexts/admin-data-context.tsx` |
@@ -122,9 +126,43 @@ consistent state to every screen:
 - an approved fee concession reduces the current-period fee amount
 - a squad override changes the head coach, batch, ground, fee, or enrolment status
 - new members, new coaches, and announcements are appended to the directory
+- a recorded expense raises Money Out and lowers Net for its period
+- a recorded other-income entry raises Money In and Net
+- paying a coach salary adds a Coach Salary expense, which marks that salary paid
 
-Overview, collection summary, and squad reports are derived from that merged state, so a recorded
-payment is visible on Overview, Finance, Reports, the member record, and the squad roster at once.
+Overview, collection summary, money summary, expense breakdown, coach salaries, and squad reports are
+all derived from that merged state, so a recorded payment, expense, or salary is visible on Overview,
+Finance, Money In, Money Out, Coach Salaries, Reports, the member record, and the squad roster at
+once.
+
+## Money In and Money Out
+
+Finance covers both directions in plain language: **Money In**, **Money Out**, **Net**, **Pending**,
+and **Paid**. There is no double-entry, no journal, no ledger, and no tax handling.
+
+| Concept | Meaning |
+| --- | --- |
+| Money In | Player fees actually collected in the period, plus other income |
+| Other income | Camp Fees, Tournament Fees, Sponsorship, Merchandise, Other |
+| Money Out | Every expense recorded against the period |
+| Expense categories | Coach Salary, Ground Rent, Equipment, Transportation, Tournament, Events, Marketing, Maintenance, Office, Other |
+| Net | Money In minus Money Out |
+
+Each expense records a category, amount, date, who it was paid to, a payment method
+(Cash / Bank Transfer / UPI), a note, and who recorded it. Other income has the same shape with
+"received from" in place of "paid to".
+
+### Coach salaries
+
+Every coach carries a `monthlySalary`. The Coach Salaries screen lists each coach's status for the
+selected period as Pending or Paid.
+
+**Paying a salary writes exactly one record: a Coach Salary expense tagged with that coach's id.**
+The salary status is then read back from that expense, so the salary screen and Money Out are the
+same fact viewed two ways and cannot drift apart. Seed salaries for May and June exist as expenses,
+which is why those periods show as paid; July starts unpaid so the Pay action has work to do.
+
+Records are stamped with the scripted demo date from `config/admin.ts`, never the device clock.
 
 ## Flows
 
@@ -134,11 +172,15 @@ payment is visible on Overview, Finance, Reports, the member record, and the squ
 4. **Enrol member** — squad, name, age, position, plan, enrolment type, and guardian details; capacity is enforced and a jersey number is allocated.
 5. **Coaches** — workload summary, uncovered-squad warning, search and engagement filter, coach records with assigned squads.
 6. **Add coach** — role, engagement, multi-squad assignment, contact details.
-7. **Finance** — billing period selector, collection card, squad collection report, fee list filtered by status, and a fee record with a Record Payment flow.
-8. **Approvals** — pending, approved, and declined queues with a confirmation dialog on each decision.
-9. **Squads** — capacity bars, head coach reassignment, enrolment status, schedule, and roster.
-10. **Reports** — billed, collected, outstanding, capacity, squad performance, enrolment mix, and squad attendance per period.
-11. **Logout** — clears the shared session and returns to Sign In; Android Back cannot reopen Admin screens.
+7. **Finance** — billing period selector, Money In / Money Out / Net summary, quick actions for Add Expense and Coach Salaries, collection card, squad collection report, fee list filtered by status, and a fee record with a Record Payment flow.
+8. **Money Out** — period selector, spend by category, search and category filter, full expense list, and Add Expense.
+9. **Add Expense** — category, amount, paid to, payment method, and note; saved against the current period.
+10. **Coach Salaries** — period selector, pending and paid totals, payment method, and a Pay action per coach that also records Money Out.
+11. **Money In** — period selector, Money In / fees / other income / Net metrics, source filter, and a combined list of collected fees and other income.
+12. **Reports** — money summary, Money Out by category, billed/collected/outstanding/capacity, squad performance, enrolment mix, and squad attendance per period.
+13. **Approvals** — pending, approved, and declined queues with a confirmation dialog on each decision.
+14. **Squads** — capacity bars, head coach reassignment, enrolment status, schedule, and roster.
+15. **Logout** — clears the shared session and returns to Sign In; Android Back cannot reopen Admin screens.
 
 ## Shared files this module touches
 
@@ -160,7 +202,11 @@ No Player or Coach screen, context, service, or dataset was modified.
   Updates feed, because that would require changing the shared updates context.
 - Attendance percentages and squad training data are read-only in the Admin module; attendance is
   still owned by the Coach module.
-- Fee amounts, periods, and the academy timeline are fixed demo values from `config/admin.ts`.
+- Fee amounts, coach salaries, periods, and the academy timeline are fixed demo values from
+  `config/admin.ts` and `data/admin.ts`.
+- Expenses and other income are always recorded against the current period; there is no back-dating,
+  editing, or deleting in this build.
+- Other income is seeded but has no Add form yet; only expenses and salary payments can be created.
 - `utils/app-storage.ts`'s `clearDemoStorage` does not clear `samp.admin.operations`; the Admin
   module exposes `clearAdminStorage` for that.
 - `README.md` and `docs/DEMO_CREDENTIALS.md` still list two demo accounts and do not mention the

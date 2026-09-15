@@ -4,7 +4,8 @@ import { StyleSheet, View } from 'react-native';
 
 import { AdminFilterChips, AdminFilterLabel, AdminSearch } from '@/components/admin/admin-filters';
 import { AdminPageHeader } from '@/components/admin/admin-header';
-import { FeeRow, SquadCollectionReport } from '@/components/admin/admin-finance';
+import { FeeRow, MoneyFlowCard, SquadCollectionReport } from '@/components/admin/admin-finance';
+import { AdminQuickAction } from '@/components/admin/admin-dashboard-lists';
 import { CollectionCard } from '@/components/admin/admin-metrics';
 import { AdminListSkeleton } from '@/components/admin/admin-states';
 import { AppScreen } from '@/components/common/app-screen';
@@ -31,6 +32,8 @@ export default function AdminFinanceScreen() {
   const [query, setQuery] = useState('');
 
   const summary = useMemo(() => admin.getCollectionSummary(period), [admin, period]);
+  const money = useMemo(() => admin.getMoneySummary(period), [admin, period]);
+  const pendingSalaries = useMemo(() => admin.getCoachSalaries(period).filter((salary) => salary.status === 'pending').length, [admin, period]);
   const reports = useMemo(() => admin.getSquadReports(period), [admin, period]);
   const records = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -50,6 +53,11 @@ export default function AdminFinanceScreen() {
     <View style={styles.sections}>
       {admin.storageWarning ? <InlineInfoBanner tone="warning" title="Payment storage unavailable" message="Recorded payments remain visible for this session only." /> : null}
       <View><AdminFilterLabel label="Billing period" /><AdminFilterChips options={periodOptions} selected={period} onSelect={setPeriod} label="Billing period" testIDPrefix="admin-finance-period" /></View>
+      <MoneyFlowCard summary={money} onMoneyIn={() => navigateOnce(() => router.push('/(admin)/finance/money-in'))} onMoneyOut={() => navigateOnce(() => router.push('/(admin)/finance/money-out'))} />
+      <View style={styles.quickGrid}>
+        <AdminQuickAction testID="admin-finance-add-expense" icon="cash-minus" label="Add Expense" onPress={() => navigateOnce(() => router.push('/(admin)/finance/new-expense'))} />
+        <AdminQuickAction testID="admin-finance-salaries" icon="whistle-outline" label={pendingSalaries ? `Coach Salaries · ${pendingSalaries}` : 'Coach Salaries'} onPress={() => navigateOnce(() => router.push('/(admin)/finance/salaries'))} />
+      </View>
       <CollectionCard summary={summary} />
       <View><SectionHeader title="Squad Collection" /><SquadCollectionReport reports={reports} /></View>
       <View style={styles.controls}>
@@ -61,4 +69,4 @@ export default function AdminFinanceScreen() {
   </AppScreen>;
 }
 
-const styles = StyleSheet.create({ sections: { gap: adminLayout.sectionGap }, controls: { gap: spacing.sm }, list: { gap: adminLayout.cardGap } });
+const styles = StyleSheet.create({ sections: { gap: adminLayout.sectionGap }, controls: { gap: spacing.sm }, list: { gap: adminLayout.cardGap }, quickGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: adminLayout.actionGridGap } });

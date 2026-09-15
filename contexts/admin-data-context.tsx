@@ -1,9 +1,9 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { adminDemoConfig } from '@/config/admin';
-import { buildAdminOverview, buildCollectionSummary, buildSquadReports, seedAdminDirectory } from '@/data/admin';
+import { buildAdminOverview, buildCoachSalaries, buildCollectionSummary, buildExpenseBreakdown, buildMoneySummary, buildSquadReports, seedAdminDirectory } from '@/data/admin';
 import { adminService, emptyAdminOperations } from '@/services/admin-service';
-import { AdminActivityEntry, AdminAnnouncementInput, AdminAnnouncementRecord, AdminApprovalItem, AdminCoach, AdminCoachInput, AdminDirectory, AdminEnrolmentInput, AdminFeeRecord, AdminMember, AdminOperationsPayload, AdminPaymentInput, AdminSquad, AdminSquadOverride, ApprovalState } from '@/types/admin';
+import { AdminActivityEntry, AdminAnnouncementInput, AdminAnnouncementRecord, AdminApprovalItem, AdminCoach, AdminCoachInput, AdminDirectory, AdminEnrolmentInput, AdminExpense, AdminExpenseInput, AdminFeeRecord, AdminIncome, AdminIncomeInput, AdminMember, AdminOperationsPayload, AdminPaymentInput, AdminSalaryPaymentInput, AdminSquad, AdminSquadOverride, ApprovalState } from '@/types/admin';
 import { formatCurrency } from '@/utils/format';
 
 type AdminDataStatus = 'loading' | 'ready' | 'error';
@@ -25,6 +25,8 @@ interface AdminDataContextValue {
   readonly approvals: readonly AdminApprovalItem[];
   readonly activity: readonly AdminActivityEntry[];
   readonly announcements: readonly AdminAnnouncementRecord[];
+  readonly expenses: readonly AdminExpense[];
+  readonly incomes: readonly AdminIncome[];
   getMember: (id: string) => AdminMember | undefined;
   getCoach: (id: string) => AdminCoach | undefined;
   getSquad: (id: string) => AdminSquad | undefined;
@@ -33,6 +35,10 @@ interface AdminDataContextValue {
   getSquadMembers: (squadId: string) => readonly AdminMember[];
   getCollectionSummary: (period: string) => ReturnType<typeof buildCollectionSummary>;
   getSquadReports: (period: string) => ReturnType<typeof buildSquadReports>;
+  getMoneySummary: (period: string) => ReturnType<typeof buildMoneySummary>;
+  getExpenseBreakdown: (period: string) => ReturnType<typeof buildExpenseBreakdown>;
+  getCoachSalaries: (period: string) => ReturnType<typeof buildCoachSalaries>;
+  getExpense: (id: string) => AdminExpense | undefined;
   readonly overview: ReturnType<typeof buildAdminOverview>;
   recordPayment: (input: AdminPaymentInput) => Promise<SaveResult<AdminFeeRecord>>;
   decideApproval: (approvalId: string, state: Exclude<ApprovalState, 'pending'>) => Promise<SaveResult<AdminApprovalItem>>;
@@ -40,6 +46,9 @@ interface AdminDataContextValue {
   addCoach: (input: AdminCoachInput) => Promise<SaveResult<AdminCoach>>;
   postAnnouncement: (input: AdminAnnouncementInput) => Promise<SaveResult<AdminAnnouncementRecord>>;
   updateSquad: (override: AdminSquadOverride) => Promise<SaveResult<AdminSquad>>;
+  recordExpense: (input: AdminExpenseInput) => Promise<SaveResult<AdminExpense>>;
+  recordIncome: (input: AdminIncomeInput) => Promise<SaveResult<AdminIncome>>;
+  payCoachSalary: (input: AdminSalaryPaymentInput) => Promise<SaveResult<AdminExpense>>;
   retry: () => void;
 }
 
@@ -111,6 +120,9 @@ export function AdminDataProvider({ children }: { readonly children: ReactNode }
 
   const coaches = useMemo(() => [...operations.coaches, ...directory.coaches], [directory.coaches, operations.coaches]);
 
+  const expenses = useMemo(() => [...operations.expenses, ...directory.expenses], [directory.expenses, operations.expenses]);
+  const incomes = useMemo(() => [...operations.incomes, ...directory.incomes], [directory.incomes, operations.incomes]);
+
   const feeRecords = useMemo(() => {
     const concessions = new Map<string, number>();
     approvedApprovals.forEach((approval) => { if (approval.kind === 'fee-concession' && approval.memberId && approval.amount) concessions.set(approval.memberId, approval.amount); });
@@ -151,6 +163,8 @@ export function AdminDataProvider({ children }: { readonly children: ReactNode }
       ...operations.enrolments.map<AdminActivityEntry>((member) => ({ id: `activity-enrolment-${member.id}`, kind: 'enrolment', title: 'New member enrolled', summary: `${member.name} joined the ${member.squadName}.`, at: member.enrolledOn })),
       ...operations.coaches.map<AdminActivityEntry>((coach) => ({ id: `activity-coach-${coach.id}`, kind: 'coach', title: 'Coach added', summary: `${coach.name} joined as ${coach.roleTitle}.`, at: coach.joinedOn })),
       ...operations.announcements.map<AdminActivityEntry>((announcement) => ({ id: `activity-announcement-${announcement.id}`, kind: 'announcement', title: 'Academy announcement published', summary: announcement.title, at: announcement.publishedAt })),
+      ...operations.expenses.map<AdminActivityEntry>((expense) => ({ id: `activity-expense-${expense.id}`, kind: 'expense', title: expense.category === 'Coach Salary' ? 'Coach salary paid' : 'Money out recorded', summary: `${expense.category} · ${formatCurrency(expense.amount)} to ${expense.paidTo}.`, at: expense.date })),
+      ...operations.incomes.map<AdminActivityEntry>((income) => ({ id: `activity-income-${income.id}`, kind: 'income', title: 'Money in recorded', summary: `${income.category} · ${formatCurrency(income.amount)} from ${income.receivedFrom}.`, at: income.date })),
       ...operations.squadOverrides.map<AdminActivityEntry>((override) => ({ id: `activity-squad-${override.squadId}`, kind: 'squad', title: 'Squad details updated', summary: `${squads.find((squad) => squad.id === override.squadId)?.name ?? 'Squad'} settings were changed.`, at: todayLabel() })),
     ];
     return [...generated, ...directory.activity];
@@ -168,6 +182,10 @@ export function AdminDataProvider({ children }: { readonly children: ReactNode }
   const getSquadMembers = useCallback((squadId: string) => members.filter((member) => member.squadId === squadId), [members]);
   const getCollectionSummary = useCallback((period: string) => buildCollectionSummary(feeRecords, period), [feeRecords]);
   const getSquadReports = useCallback((period: string) => buildSquadReports(members, squads, feeRecords, period), [feeRecords, members, squads]);
+  const getMoneySummary = useCallback((period: string) => buildMoneySummary(feeRecords, incomes, expenses, period), [expenses, feeRecords, incomes]);
+  const getExpenseBreakdown = useCallback((period: string) => buildExpenseBreakdown(expenses, period), [expenses]);
+  const getCoachSalaries = useCallback((period: string) => buildCoachSalaries(coaches, expenses, period), [coaches, expenses]);
+  const getExpense = useCallback((id: string) => expenses.find((expense) => expense.id === id), [expenses]);
 
   const recordPayment = useCallback(async (input: AdminPaymentInput): Promise<SaveResult<AdminFeeRecord>> => {
     const record = feeRecords.find((item) => item.id === input.feeId);
@@ -242,12 +260,55 @@ export function AdminDataProvider({ children }: { readonly children: ReactNode }
     return await persist(next) ? { value } : { error: 'The squad could not be saved on this device.' };
   }, [persist, squads]);
 
+  const recordExpense = useCallback(async (input: AdminExpenseInput): Promise<SaveResult<AdminExpense>> => {
+    if (!(input.amount > 0)) return { error: 'Enter an amount greater than zero.' };
+    if (!input.paidTo.trim()) return { error: 'Enter who this was paid to.' };
+    const value: AdminExpense = {
+      id: `admin-expense-${Date.now()}`, category: input.category, amount: input.amount, date: todayLabel(), period: currentPeriod,
+      paidTo: input.paidTo.trim(), method: input.method, note: input.note.trim(), recordedBy: adminDemoConfig.admin.name, source: 'admin-created',
+    };
+    const next: AdminOperationsPayload = { ...operationsRef.current, expenses: [value, ...operationsRef.current.expenses] };
+    return await persist(next) ? { value } : { error: 'The expense could not be saved on this device.' };
+  }, [persist]);
+
+  const recordIncome = useCallback(async (input: AdminIncomeInput): Promise<SaveResult<AdminIncome>> => {
+    if (!(input.amount > 0)) return { error: 'Enter an amount greater than zero.' };
+    if (!input.receivedFrom.trim()) return { error: 'Enter who this was received from.' };
+    const value: AdminIncome = {
+      id: `admin-income-${Date.now()}`, category: input.category, amount: input.amount, date: todayLabel(), period: currentPeriod,
+      receivedFrom: input.receivedFrom.trim(), method: input.method, note: input.note.trim(), recordedBy: adminDemoConfig.admin.name, source: 'admin-created',
+    };
+    const next: AdminOperationsPayload = { ...operationsRef.current, incomes: [value, ...operationsRef.current.incomes] };
+    return await persist(next) ? { value } : { error: 'The income could not be saved on this device.' };
+  }, [persist]);
+
+  /**
+   * One action, both records: paying a coach salary writes a single Coach Salary
+   * expense. The salary status is read back from that expense, so Money Out and
+   * the salary screen can never drift apart.
+   */
+  const payCoachSalary = useCallback(async (input: AdminSalaryPaymentInput): Promise<SaveResult<AdminExpense>> => {
+    const coach = coaches.find((item) => item.id === input.coachId);
+    if (!coach) return { error: 'This coach is no longer available.' };
+    const alreadyPaid = expenses.some((expense) => expense.category === 'Coach Salary' && expense.coachId === coach.id && expense.period === input.period);
+    if (alreadyPaid) return { error: `${coach.name}'s ${input.period} salary has already been paid.` };
+    const value: AdminExpense = {
+      id: `admin-expense-salary-${coach.id}-${Date.now()}`, category: 'Coach Salary', amount: coach.monthlySalary, date: todayLabel(), period: input.period,
+      paidTo: `Coach ${coach.name}`, method: input.method, note: input.note.trim() || `${input.period} salary`, recordedBy: adminDemoConfig.admin.name,
+      coachId: coach.id, source: 'admin-created',
+    };
+    const next: AdminOperationsPayload = { ...operationsRef.current, expenses: [value, ...operationsRef.current.expenses] };
+    return await persist(next) ? { value } : { error: 'The salary payment could not be saved on this device.' };
+  }, [coaches, expenses, persist]);
+
   const value = useMemo(() => ({
     status, isSaving, storageWarning, directory, members, coaches, squads, feeRecords, approvals, activity,
-    announcements, overview,
+    announcements, expenses, incomes, overview,
     getMember, getCoach, getSquad, getFeeRecord, getMemberFees, getSquadMembers, getCollectionSummary, getSquadReports,
-    recordPayment, decideApproval, enrolMember, addCoach, postAnnouncement, updateSquad, retry: load,
-  }), [activity, addCoach, announcements, approvals, coaches, decideApproval, directory, enrolMember, feeRecords, getCoach, getCollectionSummary, getFeeRecord, getMember, getMemberFees, getSquad, getSquadMembers, getSquadReports, isSaving, load, members, overview, postAnnouncement, recordPayment, squads, status, storageWarning, updateSquad]);
+    getMoneySummary, getExpenseBreakdown, getCoachSalaries, getExpense,
+    recordPayment, decideApproval, enrolMember, addCoach, postAnnouncement, updateSquad,
+    recordExpense, recordIncome, payCoachSalary, retry: load,
+  }), [activity, addCoach, announcements, approvals, coaches, decideApproval, directory, enrolMember, expenses, feeRecords, getCoach, getCoachSalaries, getCollectionSummary, getExpense, getExpenseBreakdown, getFeeRecord, getMember, getMemberFees, getMoneySummary, getSquad, getSquadMembers, getSquadReports, incomes, isSaving, load, members, overview, payCoachSalary, postAnnouncement, recordExpense, recordIncome, recordPayment, squads, status, storageWarning, updateSquad]);
 
   return <AdminDataContext.Provider value={value}>{children}</AdminDataContext.Provider>;
 }
