@@ -1,0 +1,259 @@
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+
+import { adminDemoConfig } from '@/config/admin';
+import { buildAdminOverview, buildCollectionSummary, buildSquadReports, seedAdminDirectory } from '@/data/admin';
+import { adminService, emptyAdminOperations } from '@/services/admin-service';
+import { AdminActivityEntry, AdminAnnouncementInput, AdminAnnouncementRecord, AdminApprovalItem, AdminCoach, AdminCoachInput, AdminDirectory, AdminEnrolmentInput, AdminFeeRecord, AdminMember, AdminOperationsPayload, AdminPaymentInput, AdminSquad, AdminSquadOverride, ApprovalState } from '@/types/admin';
+import { formatCurrency } from '@/utils/format';
+
+type AdminDataStatus = 'loading' | 'ready' | 'error';
+interface SaveResult<T> { readonly value?: T; readonly error?: string }
+
+const currentPeriod = adminDemoConfig.billing.currentPeriod;
+/** Records are stamped with the scripted demo date, not the device clock. */
+function todayLabel() { return adminDemoConfig.recordDateLabel; }
+
+interface AdminDataContextValue {
+  readonly status: AdminDataStatus;
+  readonly isSaving: boolean;
+  readonly storageWarning: boolean;
+  readonly directory: AdminDirectory;
+  readonly members: readonly AdminMember[];
+  readonly coaches: readonly AdminCoach[];
+  readonly squads: readonly AdminSquad[];
+  readonly feeRecords: readonly AdminFeeRecord[];
+  readonly approvals: readonly AdminApprovalItem[];
+  readonly activity: readonly AdminActivityEntry[];
+  readonly announcements: readonly AdminAnnouncementRecord[];
+  getMember: (id: string) => AdminMember | undefined;
+  getCoach: (id: string) => AdminCoach | undefined;
+  getSquad: (id: string) => AdminSquad | undefined;
+  getFeeRecord: (id: string) => AdminFeeRecord | undefined;
+  getMemberFees: (memberId: string) => readonly AdminFeeRecord[];
+  getSquadMembers: (squadId: string) => readonly AdminMember[];
+  getCollectionSummary: (period: string) => ReturnType<typeof buildCollectionSummary>;
+  getSquadReports: (period: string) => ReturnType<typeof buildSquadReports>;
+  readonly overview: ReturnType<typeof buildAdminOverview>;
+  recordPayment: (input: AdminPaymentInput) => Promise<SaveResult<AdminFeeRecord>>;
+  decideApproval: (approvalId: string, state: Exclude<ApprovalState, 'pending'>) => Promise<SaveResult<AdminApprovalItem>>;
+  enrolMember: (input: AdminEnrolmentInput) => Promise<SaveResult<AdminMember>>;
+  addCoach: (input: AdminCoachInput) => Promise<SaveResult<AdminCoach>>;
+  postAnnouncement: (input: AdminAnnouncementInput) => Promise<SaveResult<AdminAnnouncementRecord>>;
+  updateSquad: (override: AdminSquadOverride) => Promise<SaveResult<AdminSquad>>;
+  retry: () => void;
+}
+
+const AdminDataContext = createContext<AdminDataContextValue | undefined>(undefined);
+
+/**
+ * Admin read model. The typed local directory is merged with the operations the
+ * Admin has saved on this device, so every screen reads one consistent state
+ * without any network layer.
+ */
+export function AdminDataProvider({ children }: { readonly children: ReactNode }) {
+  const [directory, setDirectory] = useState<AdminDirectory>(seedAdminDirectory);
+  const [operations, setOperations] = useState<AdminOperationsPayload>(emptyAdminOperations);
+  const operationsRef = useRef(operations);
+  const savingRef = useRef(false);
+  const [status, setStatus] = useState<AdminDataStatus>('loading');
+  const [isSaving, setIsSaving] = useState(false);
+  const [storageWarning, setStorageWarning] = useState(false);
+
+  useEffect(() => { operationsRef.current = operations; }, [operations]);
+
+  const load = useCallback(async () => {
+    setStatus('loading');
+    try {
+      const [loadedDirectory, loadedOperations] = await Promise.all([adminService.loadDirectory(), adminService.loadOperations()]);
+      setDirectory(loadedDirectory);
+      setOperations(loadedOperations.payload);
+      operationsRef.current = loadedOperations.payload;
+      setStorageWarning(loadedOperations.failed);
+      setStatus('ready');
+    } catch {
+      setStatus('error');
+    }
+  }, []);
+  useEffect(() => { void load(); }, [load]);
+
+  const persist = useCallback(async (next: AdminOperationsPayload) => {
+    if (savingRef.current) return false;
+    savingRef.current = true;
+    setIsSaving(true);
+    const saved = await adminService.saveOperations(next);
+    if (saved) {
+      setOperations(next);
+      operationsRef.current = next;
+      setStorageWarning(false);
+    } else setStorageWarning(true);
+    savingRef.current = false;
+    setIsSaving(false);
+    return saved;
+  }, []);
+
+  const approvedApprovals = useMemo(() => {
+    const approvedIds = new Set(operations.decisions.filter((decision) => decision.state === 'approved').map((decision) => decision.approvalId));
+    return directory.approvals.filter((approval) => approvedIds.has(approval.id));
+  }, [directory.approvals, operations.decisions]);
+
+  const squads = useMemo(() => directory.squads.map<AdminSquad>((squad) => {
+    const override = operations.squadOverrides.find((item) => item.squadId === squad.id);
+    if (!override) return squad;
+    return {
+      ...squad,
+      headCoachId: override.headCoachId ?? squad.headCoachId,
+      batch: override.batch ?? squad.batch,
+      ground: override.ground ?? squad.ground,
+      monthlyFee: override.monthlyFee ?? squad.monthlyFee,
+      status: override.status ?? squad.status,
+    };
+  }), [directory.squads, operations.squadOverrides]);
+
+  const coaches = useMemo(() => [...operations.coaches, ...directory.coaches], [directory.coaches, operations.coaches]);
+
+  const feeRecords = useMemo(() => {
+    const concessions = new Map<string, number>();
+    approvedApprovals.forEach((approval) => { if (approval.kind === 'fee-concession' && approval.memberId && approval.amount) concessions.set(approval.memberId, approval.amount); });
+    const payments = new Map(operations.payments.map((payment) => [payment.feeId, payment]));
+    const created = operations.enrolments.map<AdminFeeRecord>((member) => ({ id: `fee-${member.id}-current`, memberId: member.id, memberName: member.name, playerId: member.playerId, squadId: member.squadId, squadName: member.squadName, period: currentPeriod, amount: member.monthlyFee, status: 'pending', dueDate: member.feeDueDate }));
+    return [...created, ...directory.feeRecords].map((record) => {
+      const concession = record.period === currentPeriod ? concessions.get(record.memberId) ?? 0 : 0;
+      const amount = Math.max(0, record.amount - concession);
+      const payment = payments.get(record.id);
+      return payment ? { ...record, amount, status: 'paid' as const, paidOn: payment.recordedOn, method: payment.method, reference: payment.reference } : { ...record, amount };
+    });
+  }, [approvedApprovals, directory.feeRecords, operations.enrolments, operations.payments]);
+
+  const members = useMemo(() => [...operations.enrolments, ...directory.members].map((member) => {
+    let next = member;
+    approvedApprovals.forEach((approval) => {
+      if (approval.memberId !== member.id) return;
+      if (approval.kind === 'enrolment') next = { ...next, enrolment: 'active' };
+      if (approval.kind === 'squad-transfer' && approval.targetSquadId) {
+        const squad = squads.find((item) => item.id === approval.targetSquadId);
+        if (squad) next = { ...next, squadId: squad.id, squadName: squad.name, category: squad.ageCategory, monthlyFee: squad.monthlyFee };
+      }
+    });
+    const current = feeRecords.find((record) => record.memberId === member.id && record.period === currentPeriod);
+    return current ? { ...next, feeStatus: current.status, feeDueDate: current.dueDate, outstandingAmount: current.status === 'paid' ? 0 : current.amount } : next;
+  }), [approvedApprovals, directory.members, feeRecords, operations.enrolments, squads]);
+
+  const approvals = useMemo(() => directory.approvals.map<AdminApprovalItem>((approval) => {
+    const decision = operations.decisions.find((item) => item.approvalId === approval.id);
+    return { ...approval, state: decision?.state ?? 'pending', decidedOn: decision?.decidedOn };
+  }), [directory.approvals, operations.decisions]);
+
+  const activity = useMemo(() => {
+    const memberName = (memberId: string) => members.find((member) => member.id === memberId)?.name ?? 'Academy member';
+    const generated: AdminActivityEntry[] = [
+      ...operations.payments.map<AdminActivityEntry>((payment) => ({ id: `activity-payment-${payment.feeId}`, kind: 'payment', title: 'Fee payment recorded', summary: `${memberName(payment.memberId)} · ${formatCurrency(payment.amount)} by ${payment.method}.`, at: payment.recordedOn })),
+      ...operations.decisions.map<AdminActivityEntry>((decision) => ({ id: `activity-approval-${decision.approvalId}`, kind: 'approval', title: decision.state === 'approved' ? 'Request approved' : 'Request declined', summary: directory.approvals.find((approval) => approval.id === decision.approvalId)?.title ?? 'Academy request', at: decision.decidedOn })),
+      ...operations.enrolments.map<AdminActivityEntry>((member) => ({ id: `activity-enrolment-${member.id}`, kind: 'enrolment', title: 'New member enrolled', summary: `${member.name} joined the ${member.squadName}.`, at: member.enrolledOn })),
+      ...operations.coaches.map<AdminActivityEntry>((coach) => ({ id: `activity-coach-${coach.id}`, kind: 'coach', title: 'Coach added', summary: `${coach.name} joined as ${coach.roleTitle}.`, at: coach.joinedOn })),
+      ...operations.announcements.map<AdminActivityEntry>((announcement) => ({ id: `activity-announcement-${announcement.id}`, kind: 'announcement', title: 'Academy announcement published', summary: announcement.title, at: announcement.publishedAt })),
+      ...operations.squadOverrides.map<AdminActivityEntry>((override) => ({ id: `activity-squad-${override.squadId}`, kind: 'squad', title: 'Squad details updated', summary: `${squads.find((squad) => squad.id === override.squadId)?.name ?? 'Squad'} settings were changed.`, at: todayLabel() })),
+    ];
+    return [...generated, ...directory.activity];
+  }, [directory.activity, directory.approvals, members, operations, squads]);
+
+  const announcements = operations.announcements;
+
+  const overview = useMemo(() => buildAdminOverview(members, coaches, squads, approvals.filter((approval) => approval.state === 'pending').length), [approvals, coaches, members, squads]);
+
+  const getMember = useCallback((id: string) => members.find((member) => member.id === id || member.playerId === id), [members]);
+  const getCoach = useCallback((id: string) => coaches.find((coach) => coach.id === id), [coaches]);
+  const getSquad = useCallback((id: string) => squads.find((squad) => squad.id === id), [squads]);
+  const getFeeRecord = useCallback((id: string) => feeRecords.find((record) => record.id === id), [feeRecords]);
+  const getMemberFees = useCallback((memberId: string) => feeRecords.filter((record) => record.memberId === memberId), [feeRecords]);
+  const getSquadMembers = useCallback((squadId: string) => members.filter((member) => member.squadId === squadId), [members]);
+  const getCollectionSummary = useCallback((period: string) => buildCollectionSummary(feeRecords, period), [feeRecords]);
+  const getSquadReports = useCallback((period: string) => buildSquadReports(members, squads, feeRecords, period), [feeRecords, members, squads]);
+
+  const recordPayment = useCallback(async (input: AdminPaymentInput): Promise<SaveResult<AdminFeeRecord>> => {
+    const record = feeRecords.find((item) => item.id === input.feeId);
+    if (!record) return { error: 'This fee record is no longer available.' };
+    if (record.status === 'paid') return { error: 'This fee has already been collected.' };
+    const recordedOn = todayLabel();
+    const next: AdminOperationsPayload = { ...operationsRef.current, payments: [{ feeId: record.id, memberId: record.memberId, amount: record.amount, method: input.method, reference: input.reference.trim() || `GCCP-${Date.now().toString().slice(-6)}`, recordedOn, recordedBy: adminDemoConfig.admin.name }, ...operationsRef.current.payments] };
+    return await persist(next) ? { value: { ...record, status: 'paid', paidOn: recordedOn, method: input.method, reference: input.reference } } : { error: 'The payment could not be saved on this device.' };
+  }, [feeRecords, persist]);
+
+  const decideApproval = useCallback(async (approvalId: string, state: Exclude<ApprovalState, 'pending'>): Promise<SaveResult<AdminApprovalItem>> => {
+    const approval = approvals.find((item) => item.id === approvalId);
+    if (!approval) return { error: 'This request is no longer available.' };
+    if (approval.state !== 'pending') return { error: 'This request has already been reviewed.' };
+    const decidedOn = todayLabel();
+    const next: AdminOperationsPayload = { ...operationsRef.current, decisions: [{ approvalId, state, decidedOn, decidedBy: adminDemoConfig.admin.name }, ...operationsRef.current.decisions] };
+    return await persist(next) ? { value: { ...approval, state, decidedOn } } : { error: 'The decision could not be saved on this device.' };
+  }, [approvals, persist]);
+
+  const enrolMember = useCallback(async (input: AdminEnrolmentInput): Promise<SaveResult<AdminMember>> => {
+    const squad = squads.find((item) => item.id === input.squadId);
+    if (!squad) return { error: 'Select a squad for this member.' };
+    if (getSquadMembers(squad.id).filter((member) => member.enrolment !== 'left').length >= squad.capacity) return { error: `${squad.name} has reached its capacity of ${squad.capacity} players.` };
+    const usedJerseys = new Set(getSquadMembers(squad.id).map((member) => member.jerseyNumber));
+    let jerseyNumber = 1;
+    while (usedJerseys.has(jerseyNumber)) jerseyNumber += 1;
+    const sequence = operationsRef.current.enrolments.length + 1;
+    const value: AdminMember = {
+      id: `admin-member-${Date.now()}`,
+      playerId: `GCC-${squad.ageCategory}-${String(900 + sequence).padStart(3, '0')}`,
+      name: input.name.trim(),
+      category: squad.ageCategory,
+      squadId: squad.id,
+      squadName: squad.name,
+      jerseyNumber,
+      age: input.age,
+      position: input.position,
+      enrolment: input.enrolment,
+      enrolledOn: todayLabel(),
+      plan: input.plan,
+      monthlyFee: input.monthlyFee,
+      feeStatus: 'pending',
+      feeDueDate: adminDemoConfig.billing.dueDate,
+      outstandingAmount: input.monthlyFee,
+      attendancePercent: 0,
+      coachName: coaches.find((coach) => coach.id === squad.headCoachId)?.name ?? 'Unassigned',
+      guardian: input.guardian,
+      source: 'admin-created',
+    };
+    const next: AdminOperationsPayload = { ...operationsRef.current, enrolments: [value, ...operationsRef.current.enrolments] };
+    return await persist(next) ? { value } : { error: 'The enrolment could not be saved on this device.' };
+  }, [coaches, getSquadMembers, persist, squads]);
+
+  const addCoach = useCallback(async (input: AdminCoachInput): Promise<SaveResult<AdminCoach>> => {
+    if (!input.squadIds.length) return { error: 'Assign at least one squad to this coach.' };
+    const value: AdminCoach = { ...input, id: `admin-coach-${Date.now()}`, name: input.name.trim(), joinedOn: todayLabel(), sessionsThisMonth: 0, source: 'admin-created' };
+    const next: AdminOperationsPayload = { ...operationsRef.current, coaches: [value, ...operationsRef.current.coaches] };
+    return await persist(next) ? { value } : { error: 'The coach record could not be saved on this device.' };
+  }, [persist]);
+
+  const postAnnouncement = useCallback(async (input: AdminAnnouncementInput): Promise<SaveResult<AdminAnnouncementRecord>> => {
+    const value: AdminAnnouncementRecord = { ...input, id: `admin-announcement-${Date.now()}`, publishedBy: adminDemoConfig.admin.name, publishedAt: todayLabel() };
+    const next: AdminOperationsPayload = { ...operationsRef.current, announcements: [value, ...operationsRef.current.announcements] };
+    return await persist(next) ? { value } : { error: 'The announcement could not be saved on this device.' };
+  }, [persist]);
+
+  const updateSquad = useCallback(async (override: AdminSquadOverride): Promise<SaveResult<AdminSquad>> => {
+    const squad = squads.find((item) => item.id === override.squadId);
+    if (!squad) return { error: 'This squad is no longer available.' };
+    const next: AdminOperationsPayload = { ...operationsRef.current, squadOverrides: [override, ...operationsRef.current.squadOverrides.filter((item) => item.squadId !== override.squadId)] };
+    const value: AdminSquad = { ...squad, headCoachId: override.headCoachId ?? squad.headCoachId, batch: override.batch ?? squad.batch, ground: override.ground ?? squad.ground, monthlyFee: override.monthlyFee ?? squad.monthlyFee, status: override.status ?? squad.status };
+    return await persist(next) ? { value } : { error: 'The squad could not be saved on this device.' };
+  }, [persist, squads]);
+
+  const value = useMemo(() => ({
+    status, isSaving, storageWarning, directory, members, coaches, squads, feeRecords, approvals, activity,
+    announcements, overview,
+    getMember, getCoach, getSquad, getFeeRecord, getMemberFees, getSquadMembers, getCollectionSummary, getSquadReports,
+    recordPayment, decideApproval, enrolMember, addCoach, postAnnouncement, updateSquad, retry: load,
+  }), [activity, addCoach, announcements, approvals, coaches, decideApproval, directory, enrolMember, feeRecords, getCoach, getCollectionSummary, getFeeRecord, getMember, getMemberFees, getSquad, getSquadMembers, getSquadReports, isSaving, load, members, overview, postAnnouncement, recordPayment, squads, status, storageWarning, updateSquad]);
+
+  return <AdminDataContext.Provider value={value}>{children}</AdminDataContext.Provider>;
+}
+
+export function useAdminData() {
+  const value = useContext(AdminDataContext);
+  if (!value) throw new Error('useAdminData must be used inside AdminDataProvider');
+  return value;
+}
