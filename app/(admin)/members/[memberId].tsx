@@ -30,7 +30,7 @@ export default function AdminMemberDetailScreen() {
   const currentFee = fees.find((record) => record.period === adminDemoConfig.billing.currentPeriod);
   const squad = admin.getSquad(member.squadId);
   return <AppScreen withTabBarClearance={false}>
-    <SubpageHeader title={member.name} subtitle={`${member.playerId} · ${member.squadName}`} onBack={back} />
+    <SubpageHeader title={member.name} subtitle={`${member.playerId} · ${member.squadName}`} onBack={back} actionLabel="Edit" actionAccessibilityLabel={`Edit ${member.name}`} onAction={() => navigateOnce(() => router.push({ pathname: '/(admin)/members/[memberId]/edit', params: { memberId: member.id } }))} />
     <View style={styles.sections}>
       <MemberIdentityCard member={member} />
       <ProfileSection title="Billing"><MemberFeeSummaryCard member={member} onRecordPayment={currentFee ? () => navigateOnce(() => router.push({ pathname: '/(admin)/finance/[feeId]', params: { feeId: currentFee.id } })) : undefined} /></ProfileSection>

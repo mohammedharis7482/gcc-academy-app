@@ -232,6 +232,22 @@ export interface AdminApprovalDecision {
   readonly decidedBy: string;
 }
 
+/** An admin correction to an enrolled member's own details. Replaces the seed values. */
+export interface AdminMemberOverride {
+  readonly memberId: string;
+  readonly name: string;
+  readonly age: number;
+  readonly position: string;
+  readonly plan: string;
+  readonly enrolment: EnrolmentStatus;
+  readonly squadId: string;
+  readonly guardian: AdminGuardian;
+  readonly updatedOn: string;
+  readonly updatedBy: string;
+}
+
+export type AdminMemberEditInput = Omit<AdminMemberOverride, 'updatedOn' | 'updatedBy'>;
+
 export interface AdminSquadOverride {
   readonly squadId: string;
   readonly headCoachId?: string;
@@ -250,6 +266,7 @@ export interface AdminOperationsPayload {
   readonly squadOverrides: readonly AdminSquadOverride[];
   readonly expenses: readonly AdminExpense[];
   readonly incomes: readonly AdminIncome[];
+  readonly memberOverrides: readonly AdminMemberOverride[];
 }
 
 export interface AdminOverview {

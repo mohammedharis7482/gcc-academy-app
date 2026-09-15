@@ -2,7 +2,7 @@ import { seedAdminDirectory } from '@/data/admin';
 import { AdminDirectory, AdminOperationsPayload } from '@/types/admin';
 import { adminStorageKeys, readAdminValueResult, writeAdminValue } from '@/utils/admin-storage';
 
-export const emptyAdminOperations: AdminOperationsPayload = { payments: [], decisions: [], enrolments: [], coaches: [], announcements: [], squadOverrides: [], expenses: [], incomes: [] };
+export const emptyAdminOperations: AdminOperationsPayload = { payments: [], decisions: [], enrolments: [], coaches: [], announcements: [], squadOverrides: [], expenses: [], incomes: [], memberOverrides: [] };
 
 function isRecord(value: unknown): value is Record<string, unknown> { return typeof value === 'object' && value !== null; }
 function hasString(value: Record<string, unknown>, key: string) { return typeof value[key] === 'string'; }
@@ -17,6 +17,7 @@ function isSquadOverride(value: unknown) { return isRecord(value) && hasString(v
 function isExpense(value: unknown) { return isRecord(value) && hasString(value, 'id') && hasString(value, 'category') && typeof value.amount === 'number' && hasString(value, 'period') && hasString(value, 'paidTo') && hasString(value, 'method'); }
 function isIncome(value: unknown) { return isRecord(value) && hasString(value, 'id') && hasString(value, 'category') && typeof value.amount === 'number' && hasString(value, 'period') && hasString(value, 'receivedFrom') && hasString(value, 'method'); }
 /** Money In and Money Out arrived after the first release, so a payload saved before then is still valid. */
+function isMemberOverride(value: unknown) { return isRecord(value) && hasString(value, 'memberId') && hasString(value, 'name') && hasString(value, 'squadId') && typeof value.age === 'number' && isRecord(value.guardian); }
 function isOptionalArrayOf(value: unknown, check: (item: unknown) => boolean) { return value === undefined || (Array.isArray(value) && value.every(check)); }
 
 function isOperationsPayload(value: unknown): value is AdminOperationsPayload {
@@ -28,7 +29,8 @@ function isOperationsPayload(value: unknown): value is AdminOperationsPayload {
     && Array.isArray(value.announcements) && value.announcements.every(isAnnouncement)
     && Array.isArray(value.squadOverrides) && value.squadOverrides.every(isSquadOverride)
     && isOptionalArrayOf(value.expenses, isExpense)
-    && isOptionalArrayOf(value.incomes, isIncome);
+    && isOptionalArrayOf(value.incomes, isIncome)
+    && isOptionalArrayOf(value.memberOverrides, isMemberOverride);
 }
 
 export const adminService = {

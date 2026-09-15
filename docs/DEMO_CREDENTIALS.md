@@ -6,6 +6,7 @@ Use these accounts only with the GCC Football Academy client demonstration build
 | --- | --- | --- | --- |
 | Player/Parent | `GCC-U13-024` | `demo123` | Player Home |
 | Coach | `GCC-COACH-001` | `coach123` | Coach Dashboard |
+| Admin | `GCC-ADMIN-001` | `admin123` | Admin Overview |
 
 ## Player scenario
 
@@ -25,9 +26,17 @@ Use these accounts only with the GCC Football Academy client demonstration build
 - Primary assignment: U13 Development Squad
 - Demo roster access includes U10, U13, and U15 records for client review
 
+## Admin scenario
+
+- Sreerag Ambadi
+- Academy Owner
+- Academy-wide scope: members, coaching staff, squads, finance, approvals, and reports
+- July 2026 billing period, with coach salaries pending for the current month
+- Announcements posted to players appear in the Player Updates tab
+
 ## Reset guidance
 
-Authentication and interaction state are stored on the test device. To demonstrate a first launch again, use the development-only Reset Demo Data action when available, or clear the app’s storage. Clearing storage also removes Sessions progress, read updates, settings, attendance submissions, assessments, and training-plan edits.
+Authentication and interaction state are stored on the test device. To demonstrate a first launch again, use the development-only Reset Demo Data action when available, or clear the app’s storage. Clearing storage also removes Sessions progress, read updates, settings, attendance submissions, assessments, training-plan edits, and Admin operations (payments, expenses, income, enrolments, member edits, approvals, and announcements).
 
-These credentials are defined once in `config/demo.ts` and consumed by the mock authentication service and development sign-in hint.
+Player and Coach credentials are defined once in `config/demo.ts`; the Admin credentials live in `config/admin.ts`. All three are consumed by the mock authentication service and the development sign-in hint.
 

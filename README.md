@@ -1,6 +1,6 @@
 # GCC Football Academy Mobile App
 
-GCC Football Academy is an Expo/React Native mobile application for academy players, parents, and coaches. The current frontend MVP provides role-based experiences, persistent on-device demo state, and connected Player–Coach workflows without a backend.
+GCC Football Academy is an Expo/React Native mobile application for academy players, parents, coaches, and academy administrators. The current frontend MVP provides role-based experiences, persistent on-device demo state, and connected Player–Coach–Admin workflows without a backend.
 
 ## Technology
 
@@ -50,6 +50,7 @@ See [Android preview build notes](docs/android-preview-build.md) for the release
 | --- | --- | --- |
 | Player/Parent | `GCC-U13-024` | `demo123` |
 | Coach | `GCC-COACH-001` | `coach123` |
+| Admin | `GCC-ADMIN-001` | `admin123` |
 
 The accounts are frontend demo credentials only. Details and reset guidance are in [Demo credentials](docs/DEMO_CREDENTIALS.md).
 
@@ -65,11 +66,13 @@ The scripted client demonstration is centred on Ayaan Mohammed of the U13 Develo
 
 The Coach account has a primary U13 assignment and includes complete U10, U13, and U15 demo rosters so roster filtering can be reviewed.
 
+The Admin account is Sreerag Ambadi, Academy Owner. It covers the academy-wide view: members, coaching staff, squads, finance (Money In, Money Out, coach salaries), approvals, reports, and academy announcements.
+
 ## Project structure
 
 ```text
 app/          Expo Router routes and role groups
-components/   Shared, Player, and Coach UI components
+components/   Shared, Player, Coach, and Admin UI components
 config/       Central demo and academy configuration
 contexts/     Persistent frontend state providers
 data/         Typed academy demo datasets and selectors
@@ -79,7 +82,7 @@ types/        Shared TypeScript models
 docs/         QA, architecture, build, and client documents
 ```
 
-The root layout owns role protection and shared providers. Player tabs live in `app/(tabs)`, Coach tabs live in `app/(coach)/(tabs)`, and supporting pages are stack routes so they do not appear in the bottom navigation.
+The root layout owns role protection and shared providers. Player tabs live in `app/(tabs)`, Coach tabs live in `app/(coach)/(tabs)`, Admin tabs live in `app/(admin)/(tabs)`, and supporting pages are stack routes so they do not appear in the bottom navigation.
 
 ## Documentation
 
@@ -89,6 +92,7 @@ The root layout owns role protection and shared providers. Player tabs live in `
 - [Changelog](CHANGELOG.md)
 - [Client feedback checklist](docs/CLIENT_FEEDBACK_CHECKLIST.md)
 - [Role architecture](docs/app-role-architecture.md)
+- [Admin module](docs/admin-module.md)
 
 ## Data and privacy
 

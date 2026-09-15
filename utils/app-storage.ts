@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { demoConfig } from '@/config/demo';
+import { clearAdminStorage } from '@/utils/admin-storage';
 
 export const storageKeys = {
   authSession: 'samp.auth.session',
@@ -66,5 +67,7 @@ export async function removeStoredValue(key: StorageKey): Promise<void> {
 export async function clearDemoStorage(preserveAuth = true): Promise<void> {
   const keys: StorageKey[] = [storageKeys.learnProgress, storageKeys.updatesReadState, storageKeys.notificationSettings, storageKeys.language, storageKeys.attendanceRecords, storageKeys.assessmentRecords, storageKeys.trainingPlans, storageKeys.academyOperations, storageKeys.demoVersion];
   if (!preserveAuth) keys.push(storageKeys.authSession);
-  await AsyncStorage.multiRemove(keys).catch(() => undefined);
+  // Admin operations live under their own key, so reset them through the Admin helper
+  // rather than repeating the key here.
+  await Promise.all([AsyncStorage.multiRemove(keys).catch(() => undefined), clearAdminStorage()]);
 }

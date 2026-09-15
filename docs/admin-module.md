@@ -60,6 +60,7 @@ app/(admin)/
     settings.tsx              Settings
   members/[memberId].tsx      Member record
   members/new.tsx             Enrol member
+  members/[memberId]/edit.tsx Edit member details and guardian
   coaches/[coachId].tsx       Coach record
   coaches/new.tsx             Add coach
   squads/index.tsx            Squad list
@@ -114,6 +115,9 @@ The admin session is **not** stored here. It lives under the shared `samp.auth.s
 Player and Coach sessions. `samp.admin.operations` holds only academy changes, so a logout clears the
 session while recorded payments, approvals, and enrolments survive.
 
+`clearDemoStorage` in `utils/app-storage.ts` calls `clearAdminStorage`, so the development-only
+Reset Demo Data action restores the Admin module to its seed state along with everything else.
+
 `AdminDataProvider` is mounted inside `app/(admin)/_layout.tsx` rather than the root layout, so the
 Player and Coach trees carry no extra providers.
 
@@ -127,6 +131,8 @@ consistent state to every screen:
 - an approved squad transfer moves the member, category, and monthly fee to the target squad
 - an approved fee concession reduces the current-period fee amount
 - a squad override changes the head coach, batch, ground, fee, or enrolment status
+- a member override replaces that member's name, age, position, plan, enrolment status, squad, and
+  guardian; moving squad also resets the category and monthly fee
 - new members, new coaches, and announcements are appended to the directory
 - a recorded expense raises Money Out and lowers Net for its period
 - a recorded other-income entry raises Money In and Net
@@ -225,19 +231,20 @@ update, and the read state persists under the existing `samp.updates.readState` 
 2. **Overview** — academy snapshot, member/coach/attendance/approval metrics, fee collection, quick actions, pending approvals, recent activity.
 3. **Members** — search by name, ID, guardian, or squad; filter by category and enrolment; open a member for billing, training, enrolment, guardian, and fee history.
 4. **Enrol member** — squad, name, age, position, plan, enrolment type, and guardian details; capacity is enforced and a jersey number is allocated.
-5. **Coaches** — workload summary, uncovered-squad warning, search and engagement filter, coach records with assigned squads.
-6. **Add coach** — role, engagement, multi-squad assignment, contact details.
-7. **Finance** — billing period selector, Money In / Money Out / Net summary, quick actions for Add Expense and Coach Salaries, collection card, squad collection report, fee list filtered by status, and a fee record with a Record Payment flow.
-8. **Money Out** — period selector, spend by category, search and category filter, full expense list, and Add Expense.
-9. **Add Expense** — category, amount, paid to, payment method, and note; saved against the current period.
-10. **Coach Salaries** — period selector, pending and paid totals, payment method, and a Pay action per coach that also records Money Out.
-11. **Money In** — period selector, Money In / fees / other income / Net metrics, source filter, a combined list of collected fees and other income, and Add Income.
-12. **Add Income** — category (Camp Fees, Tournament Fees, Sponsorship, Merchandise, Other), amount, received from, payment method, and note; saved against the current period.
-13. **Post Announcement** — category, audience, priority, title, and message; player-facing announcements appear in the Player Updates tab.
-14. **Reports** — money summary, Money Out by category, billed/collected/outstanding/capacity, squad performance, enrolment mix, and squad attendance per period.
-15. **Approvals** — pending, approved, and declined queues with a confirmation dialog on each decision.
-16. **Squads** — capacity bars, head coach reassignment, enrolment status, schedule, and roster.
-17. **Logout** — clears the shared session and returns to Sign In; Android Back cannot reopen Admin screens.
+5. **Edit member** — the member record header opens a prefilled form for name, age, position, plan, enrolment status, squad, and guardian details; capacity is enforced when moving squad.
+6. **Coaches** — workload summary, uncovered-squad warning, search and engagement filter, coach records with assigned squads.
+7. **Add coach** — role, engagement, multi-squad assignment, contact details.
+8. **Finance** — billing period selector, Money In / Money Out / Net summary, quick actions for Add Expense and Coach Salaries, collection card, squad collection report, fee list filtered by status, and a fee record with a Record Payment flow.
+9. **Money Out** — period selector, spend by category, search and category filter, full expense list, and Add Expense.
+10. **Add Expense** — category, amount, paid to, payment method, and note; saved against the current period.
+11. **Coach Salaries** — period selector, pending and paid totals, payment method, and a Pay action per coach that also records Money Out.
+12. **Money In** — period selector, Money In / fees / other income / Net metrics, source filter, a combined list of collected fees and other income, and Add Income.
+13. **Add Income** — category (Camp Fees, Tournament Fees, Sponsorship, Merchandise, Other), amount, received from, payment method, and note; saved against the current period.
+14. **Post Announcement** — category, audience, priority, title, and message; player-facing announcements appear in the Player Updates tab.
+15. **Reports** — money summary, Money Out by category, billed/collected/outstanding/capacity, squad performance, enrolment mix, and squad attendance per period.
+16. **Approvals** — pending, approved, and declined queues with a confirmation dialog on each decision.
+17. **Squads** — capacity bars, head coach reassignment, enrolment status, schedule, and roster.
+18. **Logout** — clears the shared session and returns to Sign In; Android Back cannot reopen Admin screens.
 
 ## Shared files this module touches
 
@@ -267,7 +274,7 @@ alongside its existing three; the three are untouched and each channel is isolat
   `config/admin.ts` and `data/admin.ts`.
 - Expenses and other income are always recorded against the current period; there is no back-dating,
   editing, or deleting in this build.
-- `utils/app-storage.ts`'s `clearDemoStorage` does not clear `samp.admin.operations`; the Admin
-  module exposes `clearAdminStorage` for that.
-- `README.md` and `docs/DEMO_CREDENTIALS.md` still list two demo accounts and do not mention the
-  admin account.
+- Editing a member changes the member record only. Past fee records keep the squad they were billed
+  under, and the player ID, jersey number, and enrolment date are not editable.
+- Coaches and squads have no equivalent edit form yet; squads can only change head coach and
+  enrolment status.
