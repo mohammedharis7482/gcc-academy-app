@@ -3,13 +3,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { demoConfig } from '@/config/demo';
 
 /**
- * The Admin module keeps its own storage keys and its own reader/writer so it
- * can be added without changing the shared Player/Coach storage contract. The
+ * The Admin module keeps its own operations storage so it can persist academy
+ * changes without altering the shared Player/Coach storage contract. The
  * envelope shape and version gate match `utils/app-storage.ts` exactly, so a
  * demo reset of one module behaves the same way as the other.
+ *
+ * The admin session is not stored here: sign-in is owned by `ProfileProvider`
+ * and lives under the shared `samp.auth.session` key alongside Player and Coach.
  */
 export const adminStorageKeys = {
-  adminSession: 'samp.admin.session',
   adminOperations: 'samp.admin.operations',
 } as const;
 
@@ -42,10 +44,6 @@ export async function readAdminValueResult<T>(key: AdminStorageKey, validate: (v
   }
 }
 
-export async function readAdminValue<T>(key: AdminStorageKey, validate: (value: unknown) => value is T): Promise<T | null> {
-  return (await readAdminValueResult(key, validate)).value;
-}
-
 export async function writeAdminValue<T>(key: AdminStorageKey, value: T): Promise<boolean> {
   try {
     await AsyncStorage.setItem(key, JSON.stringify({ version: demoConfig.storageVersion, value }));
@@ -56,12 +54,6 @@ export async function writeAdminValue<T>(key: AdminStorageKey, value: T): Promis
   }
 }
 
-export async function removeAdminValue(key: AdminStorageKey): Promise<void> {
-  await AsyncStorage.removeItem(key).catch(() => undefined);
-}
-
-export async function clearAdminStorage(preserveSession = true): Promise<void> {
-  const keys: AdminStorageKey[] = [adminStorageKeys.adminOperations];
-  if (!preserveSession) keys.push(adminStorageKeys.adminSession);
-  await AsyncStorage.multiRemove(keys).catch(() => undefined);
+export async function clearAdminStorage(): Promise<void> {
+  await AsyncStorage.multiRemove([adminStorageKeys.adminOperations]).catch(() => undefined);
 }

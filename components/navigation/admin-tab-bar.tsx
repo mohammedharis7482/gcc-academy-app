@@ -4,7 +4,7 @@ import { AdaptiveTabBar, AdaptiveTabBarMetrics, AdaptiveTabDefinition } from '@/
 import { adminTabBarMetrics } from '@/design/tokens/admin';
 
 const adminTabs: readonly AdaptiveTabDefinition[] = [
-  { name: 'overview', label: 'Overview', activeIcon: 'chart-box', inactiveIcon: 'chart-box-outline', pillWidth: adminTabBarMetrics.activePillWidths.overview },
+  { name: 'index', label: 'Overview', activeIcon: 'chart-box', inactiveIcon: 'chart-box-outline', pillWidth: adminTabBarMetrics.activePillWidths.index },
   { name: 'members', label: 'Members', activeIcon: 'account-multiple', inactiveIcon: 'account-multiple-outline', pillWidth: adminTabBarMetrics.activePillWidths.members },
   { name: 'coaches', label: 'Coaches', activeIcon: 'whistle', inactiveIcon: 'whistle-outline', pillWidth: adminTabBarMetrics.activePillWidths.coaches },
   { name: 'finance', label: 'Finance', activeIcon: 'cash-multiple', inactiveIcon: 'cash-multiple', pillWidth: adminTabBarMetrics.activePillWidths.finance },

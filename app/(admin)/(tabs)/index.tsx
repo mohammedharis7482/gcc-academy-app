@@ -12,7 +12,7 @@ import { ContentState } from '@/components/states/content-state';
 import { InlineInfoBanner } from '@/components/states/inline-info-banner';
 import { adminDemoConfig } from '@/config/admin';
 import { useAdminData } from '@/contexts/admin-data-context';
-import { useAdminSession } from '@/contexts/admin-session-context';
+import { useProfile } from '@/contexts/profile-context';
 import { adminLayout, adminTabBarMetrics } from '@/design/tokens/admin';
 import { useSingleNavigation } from '@/hooks/use-single-navigation';
 
@@ -20,7 +20,7 @@ export default function AdminOverviewScreen() {
   const router = useRouter();
   const navigateOnce = useSingleNavigation();
   const admin = useAdminData();
-  const { session } = useAdminSession();
+  const { session } = useProfile();
   const period = adminDemoConfig.billing.currentPeriod;
 
   if (admin.status === 'loading') return <AppScreen withTabBarClearance tabBarMetrics={adminTabBarMetrics}><AdminDashboardSkeleton /></AppScreen>;
@@ -43,7 +43,7 @@ export default function AdminOverviewScreen() {
       <View><SectionHeader title="Quick Actions" /><View style={styles.quickGrid}>
         <AdminQuickAction testID="admin-enrol-member" icon="account-plus-outline" label="Enrol Member" onPress={() => navigateOnce(() => router.push('/(admin)/members/new'))} />
         <AdminQuickAction testID="admin-add-coach" icon="whistle-outline" label="Add Coach" onPress={() => navigateOnce(() => router.push('/(admin)/coaches/new'))} />
-        <AdminQuickAction testID="admin-post-announcement" icon="bullhorn-outline" label="Post Announcement" onPress={() => navigateOnce(() => router.push('/(admin)/announcements/new'))} />
+        <AdminQuickAction testID="admin-post-announcement" icon="bullhorn-outline" label="Post Announcement" onPress={() => navigateOnce(() => router.push('/(admin)/announcement/new'))} />
         <AdminQuickAction testID="admin-manage-squads" icon="account-group-outline" label="Manage Squads" onPress={() => navigateOnce(() => router.push('/(admin)/squads'))} />
       </View></View>
       <View><SectionHeader title="Pending Approvals" actionLabel={pending.length ? 'View all' : undefined} onAction={pending.length ? () => navigateOnce(() => router.push('/(admin)/approvals')) : undefined} actionTestID="admin-view-approvals" /><ApprovalList approvals={pending.slice(0, 2)} onOpen={() => navigateOnce(() => router.push('/(admin)/approvals'))} /></View>

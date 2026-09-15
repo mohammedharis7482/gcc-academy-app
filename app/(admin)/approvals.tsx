@@ -26,7 +26,7 @@ export default function AdminApprovalsScreen() {
   const [decision, setDecision] = useState<{ readonly approval: AdminApprovalItem; readonly state: Exclude<ApprovalState, 'pending'> } | null>(null);
   const [error, setError] = useState<string>();
 
-  const back = () => { if (router.canGoBack()) router.back(); else router.replace('/(admin)/(tabs)/overview'); };
+  const back = () => { if (router.canGoBack()) router.back(); else router.replace('/(admin)/(tabs)'); };
   if (admin.status === 'loading') return <AppScreen withTabBarClearance={false}><AdminDetailSkeleton label="Loading approval queue" /></AppScreen>;
 
   const approvals = admin.approvals.filter((approval) => approval.state === filter);

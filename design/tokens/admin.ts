@@ -29,7 +29,7 @@ export const adminTabBarMetrics = {
   bottomInset: 10,
   activePillHeight: 44,
   activePillWidths: {
-    overview: 122,
+    index: 122,
     members: 110,
     coaches: 110,
     finance: 104,

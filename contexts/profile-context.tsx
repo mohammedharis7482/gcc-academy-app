@@ -73,7 +73,7 @@ function isStoredSession(value: unknown): value is StoredSession {
   if (typeof value !== 'object' || value === null || !('signedInAt' in value) || typeof value.signedInAt !== 'string') return false;
   if ('playerId' in value) return typeof value.playerId === 'string';
   const validStringIds = (ids: unknown) => ids === undefined || (Array.isArray(ids) && ids.every((id) => typeof id === 'string'));
-  return 'schemaVersion' in value && value.schemaVersion === 2 && 'userId' in value && typeof value.userId === 'string' && 'role' in value && (value.role === 'player' || value.role === 'coach') && 'displayName' in value && typeof value.displayName === 'string' && 'academyId' in value && typeof value.academyId === 'string' && validStringIds('categoryIds' in value ? value.categoryIds : undefined) && validStringIds('assignedSquadIds' in value ? value.assignedSquadIds : undefined);
+  return 'schemaVersion' in value && value.schemaVersion === 2 && 'userId' in value && typeof value.userId === 'string' && 'role' in value && (value.role === 'player' || value.role === 'coach' || value.role === 'admin') && 'displayName' in value && typeof value.displayName === 'string' && 'academyId' in value && typeof value.academyId === 'string' && validStringIds('categoryIds' in value ? value.categoryIds : undefined) && validStringIds('assignedSquadIds' in value ? value.assignedSquadIds : undefined);
 }
 
 function migrateSession(session: StoredSession | null): MockSession | null {

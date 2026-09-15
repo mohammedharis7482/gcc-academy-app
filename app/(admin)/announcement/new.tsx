@@ -32,7 +32,7 @@ export default function NewAdminAnnouncementRoute() {
   const [error, setError] = useState<string>();
   const [sheet, setSheet] = useState<'audience' | 'squads' | null>(null);
 
-  const back = () => { if (router.canGoBack()) router.back(); else router.replace('/(admin)/(tabs)/overview'); };
+  const back = () => { if (router.canGoBack()) router.back(); else router.replace('/(admin)/(tabs)'); };
   const squadSummary = squadIds.length ? squadIds.map((id) => admin.getSquad(id)?.name).filter(Boolean).join(', ') : 'Select squads';
 
   const publish = async () => {

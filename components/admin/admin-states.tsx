@@ -1,8 +1,5 @@
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet, View } from 'react-native';
 
-import { AppText } from '@/components/common/app-text';
-import { BrandLogo } from '@/components/common/brand-logo';
 import { ChipSkeleton, HeroCardSkeleton, ListRowSkeleton, PageHeaderSkeleton, PlayerRowSkeleton, SummaryCardSkeleton } from '@/components/states/loading-skeletons';
 import { adminLayout } from '@/design/tokens/admin';
 import { colors, layout, radius, spacing } from '@/design/tokens';
@@ -24,13 +21,4 @@ const styles = StyleSheet.create({
   list: { paddingHorizontal: adminLayout.pageHorizontal, gap: spacing.sm },
   search: { height: layout.minTouchTarget, borderRadius: radius.medium, backgroundColor: colors.neutral.border },
   chips: { flexDirection: 'row', gap: spacing.xs },
-});
-
-export function AdminAuthLoadingScreen() {
-  return <SafeAreaView style={authStyles.safe}><View style={authStyles.content}><BrandLogo containerSize={84} /><AppText variant="title" weight="extraBold">GCC Football Academy</AppText><AppText variant="bodySmall" color={colors.neutral.textSecondary}>Restoring the admin account…</AppText><ActivityIndicator color={colors.brand.blue} accessibilityLabel="Loading admin account" /></View></SafeAreaView>;
-}
-
-const authStyles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.neutral.background },
-  content: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
 });

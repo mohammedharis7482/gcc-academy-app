@@ -1,3 +1,4 @@
+import { adminDemoConfig } from '@/config/admin';
 import { demoConfig } from '@/config/demo';
 import { MockSession, SignInCredentials } from '@/types/profile';
 
@@ -17,6 +18,11 @@ const demoAccounts: readonly DemoAccount[] = [
     id: demoConfig.credentials.coach.id,
     password: demoConfig.credentials.coach.password,
     session: { schemaVersion: 2, userId: demoConfig.credentials.coach.id, role: 'coach', displayName: 'Coach Sandeep', academyId: 'gcc-chalissery', assignedSquadIds: ['u13'] },
+  },
+  {
+    id: adminDemoConfig.credentials.admin.id,
+    password: adminDemoConfig.credentials.admin.password,
+    session: { schemaVersion: 2, userId: adminDemoConfig.admin.adminId, role: 'admin', displayName: adminDemoConfig.admin.name, academyId: adminDemoConfig.admin.academyId },
   },
 ] as const;
 

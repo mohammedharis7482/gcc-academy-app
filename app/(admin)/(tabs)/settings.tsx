@@ -13,14 +13,14 @@ import { ProfileSkeleton } from '@/components/profile/profile-states';
 import { ContentState } from '@/components/states/content-state';
 import { adminDemoConfig } from '@/config/admin';
 import { useAdminData } from '@/contexts/admin-data-context';
-import { useAdminSession } from '@/contexts/admin-session-context';
+import { useProfile } from '@/contexts/profile-context';
 import { adminLayout, adminTabBarMetrics } from '@/design/tokens/admin';
 import { colors, radius, shadows, spacing } from '@/design/tokens';
 import { useSingleNavigation } from '@/hooks/use-single-navigation';
 
 export default function AdminSettingsScreen() {
   const admin = useAdminData();
-  const { session, logout } = useAdminSession();
+  const { session, logout } = useProfile();
   const router = useRouter();
   const navigateOnce = useSingleNavigation();
   const [logoutVisible, setLogoutVisible] = useState(false);
@@ -42,11 +42,11 @@ export default function AdminSettingsScreen() {
 
       <ProfileSection title="Academy Profile"><SurfaceCard><InfoRow icon="shield-star-outline" label="Academy" value={profile.name} /><InfoRow icon="card-account-details-outline" label="Registration" value={profile.registrationId} /><InfoRow icon="calendar-star" label="Established" value={String(profile.establishedYear)} /><InfoRow icon="map-marker-outline" label="Address" value={profile.address} /><InfoRow icon="soccer-field" label="Grounds" value={profile.grounds.join(', ')} /></SurfaceCard></ProfileSection>
 
-      <ProfileSection title="Academy Management"><SurfaceCard><ProfileMenuItem testID="admin-settings-squads" icon="account-group-outline" label="Squads and categories" supportingText={`${admin.squads.length} squads configured`} onPress={() => navigateOnce(() => router.push('/(admin)/squads'))} /><ProfileMenuItem testID="admin-settings-approvals" icon="clipboard-alert-outline" label="Approval queue" supportingText={`${admin.overview.pendingApprovals} waiting for a decision`} onPress={() => navigateOnce(() => router.push('/(admin)/approvals'))} /><ProfileMenuItem testID="admin-settings-reports" icon="chart-box-outline" label="Academy reports" supportingText="Attendance, collection, and capacity" onPress={() => navigateOnce(() => router.push('/(admin)/reports'))} /><ProfileMenuItem testID="admin-settings-announcement" icon="bullhorn-outline" label="Post announcement" supportingText={`${admin.announcements.length} published from this device`} onPress={() => navigateOnce(() => router.push('/(admin)/announcements/new'))} /></SurfaceCard></ProfileSection>
+      <ProfileSection title="Academy Management"><SurfaceCard><ProfileMenuItem testID="admin-settings-squads" icon="account-group-outline" label="Squads and categories" supportingText={`${admin.squads.length} squads configured`} onPress={() => navigateOnce(() => router.push('/(admin)/squads'))} /><ProfileMenuItem testID="admin-settings-approvals" icon="clipboard-alert-outline" label="Approval queue" supportingText={`${admin.overview.pendingApprovals} waiting for a decision`} onPress={() => navigateOnce(() => router.push('/(admin)/approvals'))} /><ProfileMenuItem testID="admin-settings-reports" icon="chart-box-outline" label="Academy reports" supportingText="Attendance, collection, and capacity" onPress={() => navigateOnce(() => router.push('/(admin)/reports'))} /><ProfileMenuItem testID="admin-settings-announcement" icon="bullhorn-outline" label="Post announcement" supportingText={`${admin.announcements.length} published from this device`} onPress={() => navigateOnce(() => router.push('/(admin)/announcement/new'))} /></SurfaceCard></ProfileSection>
 
       <ProfileSection title="Contact"><SurfaceCard><InfoRow icon="phone-outline" label="Academy phone" value={profile.phone} /><InfoRow icon="email-outline" label="Academy email" value={profile.email} /></SurfaceCard></ProfileSection>
 
-      <ProfileSection title="Account"><SurfaceCard><ProfileMenuItem testID="admin-settings-support" icon="lifebuoy" label="Help and support" supportingText="Contact the academy team" onPress={() => navigateOnce(() => router.push('/(admin)/admin-support'))} /><ProfileMenuItem testID="admin-logout" icon="logout" label="Logout" supportingText="Sign out of this admin account" destructive onPress={() => setLogoutVisible(true)} /></SurfaceCard></ProfileSection>
+      <ProfileSection title="Account"><SurfaceCard><ProfileMenuItem testID="admin-settings-support" icon="lifebuoy" label="Help and support" supportingText="Contact the academy team" onPress={() => navigateOnce(() => router.push('/(admin)/support'))} /><ProfileMenuItem testID="admin-logout" icon="logout" label="Logout" supportingText="Sign out of this admin account" destructive onPress={() => setLogoutVisible(true)} /></SurfaceCard></ProfileSection>
 
       <View style={styles.footer}><AppText variant="caption" color={colors.neutral.textMuted} style={styles.center}>Admin module · frontend demo build</AppText><AppText variant="caption" color={colors.neutral.textMuted} style={styles.center}>All academy records shown here are demonstration data stored on this device.</AppText></View>
     </View>

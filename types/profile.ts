@@ -58,7 +58,7 @@ export interface NotificationPreferences {
 export type NotificationPreferenceKey = keyof NotificationPreferences;
 export type AppLanguage = 'en';
 
-export type UserRole = 'player' | 'coach';
+export type UserRole = 'player' | 'coach' | 'admin';
 
 export interface MockSession {
   readonly schemaVersion: 2;

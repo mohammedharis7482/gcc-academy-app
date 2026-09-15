@@ -9,7 +9,7 @@ export const adminDemoConfig = {
   credentials: { admin: { id: 'GCC-ADMIN-001', password: 'admin123' } },
   admin: {
     adminId: 'GCC-ADMIN-001',
-    name: 'Rashid Kareem',
+    name: 'Sreerag Ambadi',
     roleTitle: 'Academy Owner',
     role: 'owner' as const,
     academyId: 'gcc-chalissery',
