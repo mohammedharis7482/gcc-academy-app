@@ -17,10 +17,10 @@ import { useToast } from '@/components/states/success-toast';
 import { useAdminData } from '@/contexts/admin-data-context';
 import { adminLayout } from '@/design/tokens/admin';
 import { PaymentMethod } from '@/types/admin';
+import { paymentMethodOptions, toPaymentMethod } from '@/utils/admin-display';
 import { formatCurrency } from '@/utils/format';
 import { useSingleNavigation } from '@/hooks/use-single-navigation';
 
-const methods = ['Cash', 'Bank Transfer', 'UPI'] as const satisfies readonly PaymentMethod[];
 function normalize(value: string | string[] | undefined) { const item = Array.isArray(value) ? value[0] : value; return item?.trim() || undefined; }
 
 export default function AdminFeeDetailScreen() {
@@ -40,6 +40,7 @@ export default function AdminFeeDetailScreen() {
   const back = () => { if (router.canGoBack()) router.back(); else router.replace('/(admin)/(tabs)/finance'); };
 
   if (admin.status === 'loading') return <AppScreen withTabBarClearance={false}><AdminDetailSkeleton label="Loading fee record" /></AppScreen>;
+  if (admin.status === 'error') return <AppScreen withTabBarClearance={false}><SubpageHeader title="Fee Record" onBack={back} /><ContentState type="error" title="Fee record unavailable" message="This fee record could not be loaded." onRetry={admin.retry} /></AppScreen>;
   if (!record) return <AppScreen withTabBarClearance={false}><SubpageHeader title="Fee Record" onBack={back} /><ContentState type="error" title="Fee record not found" message="This fee reference is invalid or is no longer available." actionLabel="Back to finance" onRetry={back} /></AppScreen>;
 
   const collect = async () => {
@@ -65,7 +66,7 @@ export default function AdminFeeDetailScreen() {
         <AppButton label="Open Member" variant="secondary" onPress={() => navigateOnce(() => router.push({ pathname: '/(admin)/members/[memberId]', params: { memberId: record.memberId } }))} accessibilityLabel={`Open ${record.memberName}`} />
       </View>
     </AppScreen>
-    <AppBottomSheet visible={sheetVisible} title="Payment method" description="How was this academy fee collected?" options={methods.map((value) => ({ id: value, label: value, icon: value === 'Cash' ? 'cash' as const : value === 'UPI' ? 'cellphone' as const : 'bank-outline' as const }))} selectedIds={[method]} loading={admin.isSaving} onClose={() => setSheetVisible(false)} onSelect={(id) => { const value = methods.find((item) => item === id); if (value) { setMethod(value); setSheetVisible(false); } }} />
+    <AppBottomSheet visible={sheetVisible} title="Payment method" description="How was this academy fee collected?" options={paymentMethodOptions} selectedIds={[method]} loading={admin.isSaving} onClose={() => setSheetVisible(false)} onSelect={(id) => { const value = toPaymentMethod(id); if (value) { setMethod(value); setSheetVisible(false); } }} />
   </KeyboardAvoidingView>;
 }
 

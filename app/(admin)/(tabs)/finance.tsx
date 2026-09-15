@@ -15,13 +15,13 @@ import { ContentState } from '@/components/states/content-state';
 import { InlineInfoBanner } from '@/components/states/inline-info-banner';
 import { adminDemoConfig, AdminBillingPeriod } from '@/config/admin';
 import { useAdminData } from '@/contexts/admin-data-context';
+import { adminPeriodOptions } from '@/utils/admin-display';
 import { adminLayout, adminTabBarMetrics } from '@/design/tokens/admin';
 import { spacing } from '@/design/tokens';
 import { AdminFeeRecord, AdminFeeStatus } from '@/types/admin';
 import { useSingleNavigation } from '@/hooks/use-single-navigation';
 
 type FeeFilter = 'all' | AdminFeeStatus;
-const periodOptions = adminDemoConfig.billing.periods.map((period) => ({ value: period, label: period.replace(' 2026', '') }));
 const statusOptions = [{ value: 'all' as const, label: 'All' }, { value: 'pending' as const, label: 'Pending' }, { value: 'overdue' as const, label: 'Overdue' }, { value: 'paid' as const, label: 'Paid' }];
 
 export default function AdminFinanceScreen() {
@@ -54,7 +54,7 @@ export default function AdminFinanceScreen() {
     <AdminPageHeader title="Finance" subtitle="Fee collection across every squad" actionLabel="Reports" actionTestID="admin-finance-reports" onAction={() => navigateOnce(() => router.push('/(admin)/reports'))} />
     <View style={styles.sections}>
       {admin.storageWarning ? <InlineInfoBanner tone="warning" title="Payment storage unavailable" message="Recorded payments remain visible for this session only." /> : null}
-      <View><AdminFilterLabel label="Billing period" /><AdminFilterChips options={periodOptions} selected={period} onSelect={setPeriod} label="Billing period" testIDPrefix="admin-finance-period" /></View>
+      <View><AdminFilterLabel label="Billing period" /><AdminFilterChips options={adminPeriodOptions} selected={period} onSelect={setPeriod} label="Billing period" testIDPrefix="admin-finance-period" /></View>
       <MoneyFlowCard summary={money} onMoneyIn={() => navigateOnce(() => router.push('/(admin)/finance/money-in'))} onMoneyOut={() => navigateOnce(() => router.push('/(admin)/finance/money-out'))} />
       <View style={styles.quickGrid}>
         <AdminQuickAction testID="admin-finance-add-expense" icon="cash-minus" label="Add Expense" onPress={() => navigateOnce(() => router.push('/(admin)/finance/new-expense'))} />

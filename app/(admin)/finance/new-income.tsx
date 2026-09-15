@@ -15,13 +15,13 @@ import { adminDemoConfig } from '@/config/admin';
 import { useAdminData } from '@/contexts/admin-data-context';
 import { adminLayout } from '@/design/tokens/admin';
 import { IncomeCategory, PaymentMethod } from '@/types/admin';
+import { paymentMethodOptions, toPaymentMethod } from '@/utils/admin-display';
 import { formatCurrency } from '@/utils/format';
 
 const categories = ['Camp Fees', 'Tournament Fees', 'Sponsorship', 'Merchandise', 'Other'] as const satisfies readonly IncomeCategory[];
 const categoryIcons: Readonly<Record<(typeof categories)[number], 'tent' | 'trophy-outline' | 'handshake-outline' | 'tshirt-crew-outline' | 'dots-horizontal-circle-outline'>> = {
   'Camp Fees': 'tent', 'Tournament Fees': 'trophy-outline', Sponsorship: 'handshake-outline', Merchandise: 'tshirt-crew-outline', Other: 'dots-horizontal-circle-outline',
 };
-const methods = ['Cash', 'Bank Transfer', 'UPI'] as const satisfies readonly PaymentMethod[];
 type IncomeSheet = 'category' | 'method' | null;
 
 export default function NewIncomeRoute() {
@@ -68,7 +68,7 @@ export default function NewIncomeRoute() {
       </View>
     </AppScreen>
     <AppBottomSheet visible={sheet === 'category'} title="Income category" description="Money In is grouped by category alongside player fees." options={categories.map((value) => ({ id: value, label: value, icon: categoryIcons[value] }))} selectedIds={[category]} loading={admin.isSaving} onClose={() => setSheet(null)} onSelect={(id) => { const value = categories.find((item) => item === id); if (value) { setCategory(value); setSheet(null); setError(undefined); } }} />
-    <AppBottomSheet visible={sheet === 'method'} title="Payment method" options={methods.map((value) => ({ id: value, label: value, icon: value === 'Cash' ? 'cash' as const : value === 'UPI' ? 'cellphone' as const : 'bank-outline' as const }))} selectedIds={[method]} loading={admin.isSaving} onClose={() => setSheet(null)} onSelect={(id) => { const value = methods.find((item) => item === id); if (value) { setMethod(value); setSheet(null); } }} />
+    <AppBottomSheet visible={sheet === 'method'} title="Payment method" options={paymentMethodOptions} selectedIds={[method]} loading={admin.isSaving} onClose={() => setSheet(null)} onSelect={(id) => { const value = toPaymentMethod(id); if (value) { setMethod(value); setSheet(null); } }} />
   </KeyboardAvoidingView>;
 }
 

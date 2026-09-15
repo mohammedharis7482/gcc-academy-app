@@ -8,6 +8,7 @@ import { StatusBadge } from '@/components/common/status-badge';
 import { adminLayout } from '@/design/tokens/admin';
 import { colors, radius, shadows, spacing } from '@/design/tokens';
 import { AdminCoach, AdminSquad } from '@/types/admin';
+import { initialsOf } from '@/utils/admin-display';
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
@@ -17,14 +18,14 @@ export function coachSquadNames(coach: AdminCoach, squads: readonly AdminSquad[]
 }
 
 function CoachListCardComponent({ coach, squadSummary, onPress }: { readonly coach: AdminCoach; readonly squadSummary: string; readonly onPress: (coach: AdminCoach) => void }) {
-  const initials = coach.name.split(' ').map((part) => part[0]).slice(0, 2).join('');
+  const initials = initialsOf(coach.name);
   return <AnimatedPressable testID={`admin-coach-${coach.id}`} accessibilityRole="button" accessibilityLabel={`${coach.name}, ${coach.roleTitle}, ${squadSummary}, ${coach.availability === 'available' ? 'available' : 'on leave'}`} onPress={() => onPress(coach)} style={styles.card}><View style={styles.avatar}><AppText variant="bodySmall" weight="extraBold" color={colors.brand.navy}>{initials}</AppText></View><View style={styles.copy}><View style={styles.titleRow}><AppText variant="heading" weight="extraBold" numberOfLines={1} style={styles.grow}>{coach.name}</AppText><StatusBadge label={coach.availability === 'available' ? 'Available' : 'On Leave'} tone={coach.availability === 'available' ? 'success' : 'warning'} /></View><AppText variant="caption" color={colors.neutral.textSecondary} numberOfLines={1}>{coach.roleTitle} · {coach.engagement}</AppText><View style={styles.metrics}><Metric icon="account-group-outline" label={squadSummary} /><Metric icon="clipboard-text-clock-outline" label={`${coach.sessionsThisMonth} sessions`} /></View></View><View style={styles.arrow}><MaterialCommunityIcons name="chevron-right" size={22} color={colors.brand.blue} /></View></AnimatedPressable>;
 }
 
 export const CoachListCard = memo(CoachListCardComponent);
 
 export function CoachIdentityCard({ coach, squadSummary }: { readonly coach: AdminCoach; readonly squadSummary: string }) {
-  const initials = coach.name.split(' ').map((part) => part[0]).slice(0, 2).join('');
+  const initials = initialsOf(coach.name);
   return <View style={styles.identity}><View style={styles.identityTop}><View style={styles.identityAvatar}><AppText variant="title" weight="extraBold" color={colors.neutral.white}>{initials}</AppText></View><View style={styles.grow}><AppText variant="title" weight="extraBold" color={colors.neutral.white} numberOfLines={1}>Coach {coach.name}</AppText><AppText variant="bodySmall" color={colors.navyMutedText} numberOfLines={1}>{coach.roleTitle}</AppText></View><StatusBadge label={coach.engagement} tone="info" /></View><View style={styles.assignment}><MaterialCommunityIcons name="account-group-outline" size={18} color={colors.brand.blue} /><AppText variant="bodySmall" weight="bold" color={colors.neutral.white} numberOfLines={2} style={styles.grow}>{squadSummary}</AppText></View></View>;
 }
 

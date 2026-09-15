@@ -14,11 +14,11 @@ import { ProfileSection, SubpageHeader } from '@/components/profile/profile-shar
 import { ContentState } from '@/components/states/content-state';
 import { AdminBillingPeriod, adminDemoConfig } from '@/config/admin';
 import { useAdminData } from '@/contexts/admin-data-context';
+import { adminPeriodOptions } from '@/utils/admin-display';
 import { adminLayout } from '@/design/tokens/admin';
 import { colors, radius, shadows, spacing } from '@/design/tokens';
 import { formatCurrency } from '@/utils/format';
 
-const periodOptions = adminDemoConfig.billing.periods.map((period) => ({ value: period, label: period.replace(' 2026', '') }));
 
 export default function AdminReportsScreen() {
   const router = useRouter();
@@ -45,7 +45,7 @@ export default function AdminReportsScreen() {
   return <AppScreen withTabBarClearance={false}>
     <SubpageHeader title="Reports" subtitle="Attendance, collection, and capacity" onBack={back} />
     <View style={styles.sections}>
-      <View><AdminFilterLabel label="Billing period" /><AdminFilterChips options={periodOptions} selected={period} onSelect={setPeriod} label="Billing period" testIDPrefix="admin-report-period" /></View>
+      <View><AdminFilterLabel label="Billing period" /><AdminFilterChips options={adminPeriodOptions} selected={period} onSelect={setPeriod} label="Billing period" testIDPrefix="admin-report-period" /></View>
       <MetricGrid metrics={[
         { id: 'billed', icon: 'file-document-outline', label: 'Billed', value: formatCurrency(summary.billed), supporting: `${summary.paidCount + summary.pendingCount + summary.overdueCount} fee records` },
         { id: 'collected', icon: 'cash-check', label: 'Collected', value: formatCurrency(summary.collected), supporting: `${summary.collectionRate}% of billed`, tone: 'success' },

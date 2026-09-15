@@ -26,7 +26,7 @@ const audienceLabels: Readonly<Record<AdminAnnouncementAudience, string>> = {
  * `coaches` announcements never reach a player. `all-players` reaches everyone,
  * and `selected-categories` reaches only players whose own category is targeted.
  */
-export function adminAnnouncementUpdates(announcements: readonly AdminAnnouncementRecord[], playerCategoryIds: readonly string[]): readonly AcademyCommunicationUpdate[] {
+function adminAnnouncementUpdates(announcements: readonly AdminAnnouncementRecord[], playerCategoryIds: readonly string[]): readonly AcademyCommunicationUpdate[] {
   return announcements
     .filter((announcement) => {
       if (announcement.audience === 'coaches') return false;

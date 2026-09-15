@@ -52,6 +52,7 @@ export default function EditMemberRoute() {
 
   const back = () => { if (router.canGoBack()) router.back(); else router.replace('/(admin)/(tabs)/members'); };
   if (admin.status === 'loading') return <AppScreen withTabBarClearance={false}><AdminDetailSkeleton label="Loading member record" /></AppScreen>;
+  if (admin.status === 'error') return <AppScreen withTabBarClearance={false}><SubpageHeader title="Edit Member" onBack={back} /><ContentState type="error" title="Member record unavailable" message="This member record could not be loaded." onRetry={admin.retry} /></AppScreen>;
   if (!member) return <AppScreen withTabBarClearance={false}><SubpageHeader title="Edit Member" onBack={back} /><ContentState type="error" title="Member not found" message="This member ID is invalid or the record is no longer available." actionLabel="Back to members" onRetry={back} /></AppScreen>;
 
   const squad = admin.squads.find((item) => item.id === squadId);

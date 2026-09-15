@@ -7,13 +7,13 @@ import { AdminFilterChips, AdminFilterLabel, AdminSearch } from '@/components/ad
 import { ExpenseBreakdownCard, ExpenseRow } from '@/components/admin/admin-finance';
 import { MetricGrid } from '@/components/admin/admin-metrics';
 import { AdminDetailSkeleton } from '@/components/admin/admin-states';
-import { AppButton } from '@/components/common/app-button';
 import { AppScreen } from '@/components/common/app-screen';
 import { ProfileSection, SubpageHeader } from '@/components/profile/profile-shared';
 import { ContentState } from '@/components/states/content-state';
 import { InlineInfoBanner } from '@/components/states/inline-info-banner';
 import { AdminBillingPeriod, adminDemoConfig } from '@/config/admin';
 import { useAdminData } from '@/contexts/admin-data-context';
+import { adminPeriodOptions } from '@/utils/admin-display';
 import { searchAdminExpenses } from '@/data/admin';
 import { adminLayout } from '@/design/tokens/admin';
 import { spacing } from '@/design/tokens';
@@ -22,7 +22,6 @@ import { formatCurrency } from '@/utils/format';
 import { useSingleNavigation } from '@/hooks/use-single-navigation';
 
 type CategoryFilter = 'all' | ExpenseCategory;
-const periodOptions = adminDemoConfig.billing.periods.map((period) => ({ value: period, label: period.replace(' 2026', '') }));
 const categories: readonly ExpenseCategory[] = ['Coach Salary', 'Ground Rent', 'Equipment', 'Transportation', 'Tournament', 'Events', 'Marketing', 'Maintenance', 'Office', 'Other'];
 const previewCount = 8;
 const categoryOptions = [{ value: 'all' as const, label: 'All' }, ...categories.map((category) => ({ value: category, label: category }))];
@@ -51,7 +50,7 @@ export default function AdminMoneyOutScreen() {
     <SubpageHeader title="Money Out" subtitle="Everything the academy spent" onBack={back} actionLabel="Add expense" actionAccessibilityLabel="Add an academy expense" onAction={() => navigateOnce(() => router.push('/(admin)/finance/new-expense'))} />
     <View style={styles.sections}>
       {admin.storageWarning ? <InlineInfoBanner tone="warning" title="Expense storage unavailable" message="Recorded expenses remain visible for this session only." /> : null}
-      <View><AdminFilterLabel label="Period" /><AdminFilterChips options={periodOptions} selected={period} onSelect={(value) => { setPeriod(value); setShowAll(false); }} label="Period" testIDPrefix="admin-money-out-period" /></View>
+      <View><AdminFilterLabel label="Period" /><AdminFilterChips options={adminPeriodOptions} selected={period} onSelect={(value) => { setPeriod(value); setShowAll(false); }} label="Period" testIDPrefix="admin-money-out-period" /></View>
       <MetricGrid metrics={[
         { id: 'out', icon: 'cash-minus', label: 'Money Out', value: formatCurrency(summary.moneyOut), supporting: `${summary.expenseCount} records`, tone: 'error' },
         { id: 'top', icon: 'chart-donut', label: 'Largest category', value: breakdown[0]?.category ?? 'None', supporting: breakdown[0] ? `${formatCurrency(breakdown[0].amount)} · ${breakdown[0].share}%` : 'Nothing recorded yet' },
@@ -62,7 +61,6 @@ export default function AdminMoneyOutScreen() {
         <View><AdminFilterLabel label="Category" /><AdminFilterChips options={categoryOptions} selected={category} onSelect={(value) => { setCategory(value); setShowAll(false); }} label="Category" testIDPrefix="admin-expense-category" /></View>
       </View>
       <ProfileSection title={`Records · ${expenses.length}`}>{expenses.length ? <View style={styles.list}>{(showAll ? expenses : expenses.slice(0, previewCount)).map((expense) => <ExpenseRow key={expense.id} expense={expense} />)}<AdminShowMore testID="admin-money-out-show-all" expanded={showAll} hiddenCount={Math.max(0, expenses.length - previewCount)} onToggle={() => setShowAll((value) => !value)} /></View> : <ContentState type="empty" icon="cash-minus" title="No money out" message={query || category !== 'all' ? 'No spending matches the selected filters.' : 'Nothing has been recorded for this period yet.'} />}</ProfileSection>
-      <AppButton testID="admin-money-out-add" label="Add Expense" onPress={() => navigateOnce(() => router.push('/(admin)/finance/new-expense'))} accessibilityLabel="Add an academy expense" />
     </View>
   </AppScreen>;
 }

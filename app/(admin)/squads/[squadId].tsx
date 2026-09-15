@@ -40,6 +40,7 @@ export default function AdminSquadDetailScreen() {
   const back = () => { if (router.canGoBack()) router.back(); else router.replace('/(admin)/squads'); };
 
   if (admin.status === 'loading') return <AppScreen withTabBarClearance={false}><AdminDetailSkeleton label="Loading squad" /></AppScreen>;
+  if (admin.status === 'error') return <AppScreen withTabBarClearance={false}><SubpageHeader title="Squad" onBack={back} /><ContentState type="error" title="Squad unavailable" message="This squad could not be loaded." onRetry={admin.retry} /></AppScreen>;
   if (!squad) return <AppScreen withTabBarClearance={false}><SubpageHeader title="Squad" onBack={back} /><ContentState type="error" title="Squad not found" message="This squad ID is invalid or is no longer available." actionLabel="Back to squads" onRetry={back} /></AppScreen>;
 
   const members = admin.getSquadMembers(squad.id).filter((member) => member.enrolment !== 'left').sort((a, b) => a.jerseyNumber - b.jerseyNumber);

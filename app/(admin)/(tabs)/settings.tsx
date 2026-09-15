@@ -17,6 +17,7 @@ import { useProfile } from '@/contexts/profile-context';
 import { adminLayout, adminTabBarMetrics } from '@/design/tokens/admin';
 import { colors, radius, shadows, spacing } from '@/design/tokens';
 import { useSingleNavigation } from '@/hooks/use-single-navigation';
+import { initialsOf } from '@/utils/admin-display';
 
 export default function AdminSettingsScreen() {
   const admin = useAdminData();
@@ -32,7 +33,7 @@ export default function AdminSettingsScreen() {
 
   const profile = admin.directory.profile;
   const name = session?.displayName ?? adminDemoConfig.admin.name;
-  const initials = name.split(' ').map((part) => part[0]).slice(0, 2).join('');
+  const initials = initialsOf(name);
   const confirmLogout = async () => { if (logoutPendingRef.current) return; logoutPendingRef.current = true; setLogoutPending(true); await logout(); };
 
   return <AppScreen withTabBarClearance tabBarMetrics={adminTabBarMetrics}>

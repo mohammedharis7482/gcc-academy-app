@@ -7,6 +7,7 @@ import { AppButton } from '@/components/common/app-button';
 import { AppText } from '@/components/common/app-text';
 import { ProgressBar } from '@/components/common/progress-bar';
 import { StatusBadge } from '@/components/common/status-badge';
+import { ContentState } from '@/components/states/content-state';
 import { feeLabel, feeTone } from '@/components/admin/admin-member-cards';
 import { adminLayout } from '@/design/tokens/admin';
 import { colors, radius, shadows, spacing } from '@/design/tokens';
@@ -104,7 +105,7 @@ export function feeIncomeRowProps(record: AdminFeeRecord) {
 }
 
 export function ExpenseBreakdownCard({ breakdown }: { readonly breakdown: readonly AdminExpenseBreakdownRow[] }) {
-  if (!breakdown.length) return <View style={styles.card}><AppText variant="bodySmall" color={colors.neutral.textSecondary}>No money out recorded for this period.</AppText></View>;
+  if (!breakdown.length) return <ContentState type="empty" compact icon="cash-minus" title="No money out" message="Nothing has been recorded for this period." />;
   return <View style={styles.card}>{breakdown.map((row, index) => <View key={row.category} style={[styles.report, index > 0 && styles.divided]}><View style={styles.reportTop}><MaterialCommunityIcons name={expenseCategoryIcons[row.category]} size={17} color={colors.brand.blue} /><AppText variant="bodySmall" weight="extraBold" numberOfLines={1} style={styles.grow}>{row.category}</AppText><AppText variant="bodySmall" weight="extraBold">{formatCurrency(row.amount)}</AppText></View><ProgressBar progress={row.share / 100} color={colors.brand.navy} accessibilityLabel={`${row.category}: ${row.share} percent of money out`} /><AppText variant="caption" color={colors.neutral.textSecondary}>{row.share}% of money out · {row.count} {row.count === 1 ? 'record' : 'records'}</AppText></View>)}</View>;
 }
 

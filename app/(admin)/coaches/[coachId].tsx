@@ -25,6 +25,7 @@ export default function AdminCoachDetailScreen() {
   const back = () => { if (router.canGoBack()) router.back(); else router.replace('/(admin)/(tabs)/coaches'); };
 
   if (admin.status === 'loading') return <AppScreen withTabBarClearance={false}><AdminDetailSkeleton label="Loading coach record" /></AppScreen>;
+  if (admin.status === 'error') return <AppScreen withTabBarClearance={false}><SubpageHeader title="Coach Detail" onBack={back} /><ContentState type="error" title="Coach record unavailable" message="This coach record could not be loaded." onRetry={admin.retry} /></AppScreen>;
   if (!coach) return <AppScreen withTabBarClearance={false}><SubpageHeader title="Coach Detail" onBack={back} /><ContentState type="error" title="Coach not found" message="This coach ID is invalid or the record is no longer available." actionLabel="Back to coaches" onRetry={back} /></AppScreen>;
 
   const squads = admin.squads.filter((squad) => coach.squadIds.includes(squad.id));

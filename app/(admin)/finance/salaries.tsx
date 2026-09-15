@@ -18,10 +18,9 @@ import { AdminBillingPeriod, adminDemoConfig } from '@/config/admin';
 import { useAdminData } from '@/contexts/admin-data-context';
 import { adminLayout } from '@/design/tokens/admin';
 import { AdminCoachSalary, PaymentMethod } from '@/types/admin';
+import { adminPeriodOptions, paymentMethodOptions, toPaymentMethod } from '@/utils/admin-display';
 import { formatCurrency } from '@/utils/format';
 
-const periodOptions = adminDemoConfig.billing.periods.map((period) => ({ value: period, label: period.replace(' 2026', '') }));
-const methods = ['Cash', 'Bank Transfer', 'UPI'] as const satisfies readonly PaymentMethod[];
 
 export default function AdminSalariesScreen() {
   const router = useRouter();
@@ -68,7 +67,7 @@ export default function AdminSalariesScreen() {
         {admin.storageWarning ? <InlineInfoBanner tone="warning" title="Salary storage unavailable" message="Paid salaries remain visible for this session only." /> : null}
         {error ? <InlineInfoBanner tone="error" title="Salary not paid" message={error} actionLabel="Dismiss" onAction={() => setError(undefined)} /> : null}
         <InlineInfoBanner tone="info" title="Paying a salary records Money Out" message="Each payment is also saved as a Coach Salary expense, so Money Out and Net update together." />
-        <View><AdminFilterLabel label="Period" /><AdminFilterChips options={periodOptions} selected={period} onSelect={setPeriod} label="Period" testIDPrefix="admin-salary-period" /></View>
+        <View><AdminFilterLabel label="Period" /><AdminFilterChips options={adminPeriodOptions} selected={period} onSelect={setPeriod} label="Period" testIDPrefix="admin-salary-period" /></View>
         <MetricGrid metrics={[
           { id: 'pending', icon: 'cash-clock', label: 'Pending', value: formatCurrency(totals.pendingAmount), supporting: `${totals.pendingCount} ${totals.pendingCount === 1 ? 'coach' : 'coaches'} unpaid`, tone: totals.pendingCount ? 'warning' : 'success' },
           { id: 'paid', icon: 'cash-check', label: 'Paid', value: formatCurrency(totals.paidAmount), supporting: `${totals.paidCount} of ${salaries.length} coaches`, tone: 'success' },
@@ -77,7 +76,7 @@ export default function AdminSalariesScreen() {
         <ProfileSection title={`Coaches · ${salaries.length}`}>{salaries.length ? <View style={styles.list}>{salaries.map((salary) => <CoachSalaryRow key={salary.coachId} salary={salary} busy={admin.isSaving} onPay={setPending} />)}</View> : <ContentState type="empty" icon="whistle-outline" title="No coaches" message="Add a coach to track salary payments." />}</ProfileSection>
       </View>
     </AppScreen>
-    <AppBottomSheet visible={methodSheet} title="Payment method" description="How is the salary being paid?" options={methods.map((value) => ({ id: value, label: value, icon: value === 'Cash' ? 'cash' as const : value === 'UPI' ? 'cellphone' as const : 'bank-outline' as const }))} selectedIds={[method]} loading={admin.isSaving} onClose={() => setMethodSheet(false)} onSelect={(id) => { const value = methods.find((item) => item === id); if (value) { setMethod(value); setMethodSheet(false); } }} />
+    <AppBottomSheet visible={methodSheet} title="Payment method" description="How is the salary being paid?" options={paymentMethodOptions} selectedIds={[method]} loading={admin.isSaving} onClose={() => setMethodSheet(false)} onSelect={(id) => { const value = toPaymentMethod(id); if (value) { setMethod(value); setMethodSheet(false); } }} />
     <AppConfirmationDialog visible={Boolean(pending)} icon="cash-minus" title={`Pay ${pending ? formatCurrency(pending.amount) : ''}?`} description={pending ? `${pending.period} salary for Coach ${pending.coachName}, paid by ${method}. This is also recorded as Money Out in the Coach Salary category.` : ''} cancelLabel="Cancel" confirmLabel="Pay Salary" confirmTestID="admin-confirm-pay-salary" loading={admin.isSaving} onCancel={() => setPending(null)} onConfirm={() => { void confirmPay(); }} />
   </>;
 }

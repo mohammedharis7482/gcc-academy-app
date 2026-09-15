@@ -13,13 +13,13 @@ import { ProfileSection, SubpageHeader } from '@/components/profile/profile-shar
 import { ContentState } from '@/components/states/content-state';
 import { AdminBillingPeriod, adminDemoConfig } from '@/config/admin';
 import { useAdminData } from '@/contexts/admin-data-context';
+import { adminPeriodOptions } from '@/utils/admin-display';
 import { adminLayout } from '@/design/tokens/admin';
 import { useSingleNavigation } from '@/hooks/use-single-navigation';
 import { spacing } from '@/design/tokens';
 import { formatCurrency } from '@/utils/format';
 
 type SourceFilter = 'all' | 'fees' | 'other';
-const periodOptions = adminDemoConfig.billing.periods.map((period) => ({ value: period, label: period.replace(' 2026', '') }));
 const previewCount = 8;
 const sourceOptions = [{ value: 'all' as const, label: 'All' }, { value: 'fees' as const, label: 'Player Fees' }, { value: 'other' as const, label: 'Other Income' }];
 
@@ -51,7 +51,7 @@ export default function AdminMoneyInScreen() {
   return <AppScreen withTabBarClearance={false}>
     <SubpageHeader title="Money In" subtitle="Player fees and other academy income" onBack={back} actionLabel="Add income" actionAccessibilityLabel="Add other academy income" onAction={() => navigateOnce(() => router.push('/(admin)/finance/new-income'))} />
     <View style={styles.sections}>
-      <View><AdminFilterLabel label="Period" /><AdminFilterChips options={periodOptions} selected={period} onSelect={(value) => { setPeriod(value); setShowAll(false); }} label="Period" testIDPrefix="admin-money-in-period" /></View>
+      <View><AdminFilterLabel label="Period" /><AdminFilterChips options={adminPeriodOptions} selected={period} onSelect={(value) => { setPeriod(value); setShowAll(false); }} label="Period" testIDPrefix="admin-money-in-period" /></View>
       <MetricGrid metrics={[
         { id: 'in', icon: 'cash-plus', label: 'Money In', value: formatCurrency(summary.moneyIn), supporting: `${summary.incomeCount} records`, tone: 'success' },
         { id: 'fees', icon: 'account-cash-outline', label: 'Player fees', value: formatCurrency(summary.feeIncome), supporting: 'Fees collected this period' },

@@ -16,10 +16,10 @@ import { adminDemoConfig } from '@/config/admin';
 import { useAdminData } from '@/contexts/admin-data-context';
 import { adminLayout } from '@/design/tokens/admin';
 import { ExpenseCategory, PaymentMethod } from '@/types/admin';
+import { paymentMethodOptions, toPaymentMethod } from '@/utils/admin-display';
 import { formatCurrency } from '@/utils/format';
 
 const categories = ['Coach Salary', 'Ground Rent', 'Equipment', 'Transportation', 'Tournament', 'Events', 'Marketing', 'Maintenance', 'Office', 'Other'] as const satisfies readonly ExpenseCategory[];
-const methods = ['Cash', 'Bank Transfer', 'UPI'] as const satisfies readonly PaymentMethod[];
 type ExpenseSheet = 'category' | 'method' | null;
 
 export default function NewExpenseRoute() {
@@ -66,7 +66,7 @@ export default function NewExpenseRoute() {
       </View>
     </AppScreen>
     <AppBottomSheet visible={sheet === 'category'} title="Expense category" description="Money Out is grouped by category in Reports." options={categories.map((value) => ({ id: value, label: value, icon: expenseCategoryIcons[value] }))} selectedIds={[category]} loading={admin.isSaving} onClose={() => setSheet(null)} onSelect={(id) => { const value = categories.find((item) => item === id); if (value) { setCategory(value); setSheet(null); setError(undefined); } }} />
-    <AppBottomSheet visible={sheet === 'method'} title="Payment method" options={methods.map((value) => ({ id: value, label: value, icon: value === 'Cash' ? 'cash' as const : value === 'UPI' ? 'cellphone' as const : 'bank-outline' as const }))} selectedIds={[method]} loading={admin.isSaving} onClose={() => setSheet(null)} onSelect={(id) => { const value = methods.find((item) => item === id); if (value) { setMethod(value); setSheet(null); } }} />
+    <AppBottomSheet visible={sheet === 'method'} title="Payment method" options={paymentMethodOptions} selectedIds={[method]} loading={admin.isSaving} onClose={() => setSheet(null)} onSelect={(id) => { const value = toPaymentMethod(id); if (value) { setMethod(value); setSheet(null); } }} />
   </KeyboardAvoidingView>;
 }
 

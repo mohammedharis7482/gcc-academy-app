@@ -1,7 +1,6 @@
 import { AgeCategory } from '@/types/academy';
 import { AcademyUpdateCategory } from '@/types/updates';
 
-export type AdminRole = 'owner' | 'manager' | 'front-desk';
 export type EnrolmentStatus = 'active' | 'trial' | 'paused' | 'left';
 export type AdminFeeStatus = 'paid' | 'pending' | 'overdue';
 export type CoachEngagement = 'Full-time' | 'Part-time' | 'Guest';
@@ -15,20 +14,6 @@ export type PaymentMethod = 'Cash' | 'Bank Transfer' | 'UPI';
 export type ExpenseCategory = 'Coach Salary' | 'Ground Rent' | 'Equipment' | 'Transportation' | 'Tournament' | 'Events' | 'Marketing' | 'Maintenance' | 'Office' | 'Other';
 export type IncomeCategory = 'Camp Fees' | 'Tournament Fees' | 'Sponsorship' | 'Merchandise' | 'Other';
 export type SalaryStatus = 'pending' | 'paid';
-
-export interface AdminSession {
-  readonly schemaVersion: 1;
-  readonly adminId: string;
-  readonly displayName: string;
-  readonly role: AdminRole;
-  readonly academyId: string;
-  readonly signedInAt: string;
-}
-
-export interface AdminSignInCredentials {
-  readonly identifier: string;
-  readonly password: string;
-}
 
 export interface AdminGuardian {
   readonly name: string;

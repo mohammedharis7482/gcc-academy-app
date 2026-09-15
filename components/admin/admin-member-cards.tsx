@@ -9,6 +9,7 @@ import { StatusBadge } from '@/components/common/status-badge';
 import { adminLayout } from '@/design/tokens/admin';
 import { colors, layout, radius, shadows, spacing } from '@/design/tokens';
 import { AdminFeeRecord, AdminFeeStatus, AdminMember, EnrolmentStatus } from '@/types/admin';
+import { initialsOf } from '@/utils/admin-display';
 import { formatCurrency } from '@/utils/format';
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
@@ -19,7 +20,6 @@ export const enrolmentLabel: Readonly<Record<EnrolmentStatus, string>> = { activ
 export const feeTone: Readonly<Record<AdminFeeStatus, Tone>> = { paid: 'success', pending: 'warning', overdue: 'error' };
 export const feeLabel: Readonly<Record<AdminFeeStatus, string>> = { paid: 'Paid', pending: 'Pending', overdue: 'Overdue' };
 
-function initialsOf(name: string) { return name.split(' ').map((part) => part[0]).slice(0, 2).join(''); }
 
 function MemberListCardComponent({ member, onPress }: { readonly member: AdminMember; readonly onPress: (member: AdminMember) => void }) {
   const label = `${member.name}, ${member.playerId}, ${member.squadName}, ${enrolmentLabel[member.enrolment]}, fee ${feeLabel[member.feeStatus]}`;
