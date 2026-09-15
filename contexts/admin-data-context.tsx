@@ -1,6 +1,7 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { adminDemoConfig } from '@/config/admin';
+import { useAdminAnnouncements } from '@/contexts/admin-announcements-context';
 import { buildAdminOverview, buildCoachSalaries, buildCollectionSummary, buildExpenseBreakdown, buildMoneySummary, buildSquadReports, seedAdminDirectory } from '@/data/admin';
 import { adminService, emptyAdminOperations } from '@/services/admin-service';
 import { AdminActivityEntry, AdminAnnouncementInput, AdminAnnouncementRecord, AdminApprovalItem, AdminCoach, AdminCoachInput, AdminDirectory, AdminEnrolmentInput, AdminExpense, AdminExpenseInput, AdminFeeRecord, AdminIncome, AdminIncomeInput, AdminMember, AdminOperationsPayload, AdminPaymentInput, AdminSalaryPaymentInput, AdminSquad, AdminSquadOverride, ApprovalState } from '@/types/admin';
@@ -60,6 +61,7 @@ const AdminDataContext = createContext<AdminDataContextValue | undefined>(undefi
  * without any network layer.
  */
 export function AdminDataProvider({ children }: { readonly children: ReactNode }) {
+  const { refresh: refreshPlayerAnnouncementFeed } = useAdminAnnouncements();
   const [directory, setDirectory] = useState<AdminDirectory>(seedAdminDirectory);
   const [operations, setOperations] = useState<AdminOperationsPayload>(emptyAdminOperations);
   const operationsRef = useRef(operations);
@@ -249,8 +251,11 @@ export function AdminDataProvider({ children }: { readonly children: ReactNode }
   const postAnnouncement = useCallback(async (input: AdminAnnouncementInput): Promise<SaveResult<AdminAnnouncementRecord>> => {
     const value: AdminAnnouncementRecord = { ...input, id: `admin-announcement-${Date.now()}`, publishedBy: adminDemoConfig.admin.name, publishedAt: todayLabel() };
     const next: AdminOperationsPayload = { ...operationsRef.current, announcements: [value, ...operationsRef.current.announcements] };
-    return await persist(next) ? { value } : { error: 'The announcement could not be saved on this device.' };
-  }, [persist]);
+    if (!await persist(next)) return { error: 'The announcement could not be saved on this device.' };
+    // The Player Updates bridge lives in the root layout, so tell it to re-read.
+    refreshPlayerAnnouncementFeed();
+    return { value };
+  }, [persist, refreshPlayerAnnouncementFeed]);
 
   const updateSquad = useCallback(async (override: AdminSquadOverride): Promise<SaveResult<AdminSquad>> => {
     const squad = squads.find((item) => item.id === override.squadId);

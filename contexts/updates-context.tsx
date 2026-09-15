@@ -15,6 +15,7 @@ interface UpdatesContextValue {
   syncAssessmentUpdates: (updates: readonly AcademyCommunicationUpdate[]) => void;
   syncTrainingUpdates: (updates: readonly AcademyCommunicationUpdate[]) => void;
   syncOperationUpdates: (updates: readonly AcademyCommunicationUpdate[]) => void;
+  syncAdminAnnouncementUpdates: (updates: readonly AcademyCommunicationUpdate[]) => void;
   retry: () => void;
 }
 
@@ -22,13 +23,16 @@ const initialState: UpdatesState = { updates: [], readIds: new Set<string>(), st
 const assessmentUpdatePrefix = 'coach-assessment-update-';
 const trainingUpdatePrefix = 'coach-training-update-';
 const operationUpdatePrefix = 'coach-operation-update-';
+const adminAnnouncementUpdatePrefix = 'admin-announcement-update-';
+const domainUpdatePrefixes = [assessmentUpdatePrefix, trainingUpdatePrefix, operationUpdatePrefix, adminAnnouncementUpdatePrefix] as const;
+function isDomainUpdateId(id: string) { return domainUpdatePrefixes.some((prefix) => id.startsWith(prefix)); }
 
 function updatesReducer(state: UpdatesState, action: UpdatesAction): UpdatesState {
   switch (action.type) {
     case 'loading': return { ...state, status: 'loading' };
     case 'load-error': return { ...state, status: 'error' };
     case 'load-success': {
-      const domainUpdates = state.updates.filter((item) => item.id.startsWith(assessmentUpdatePrefix) || item.id.startsWith(trainingUpdatePrefix) || item.id.startsWith(operationUpdatePrefix));
+      const domainUpdates = state.updates.filter((item) => isDomainUpdateId(item.id));
       return { updates: [...domainUpdates, ...action.updates], status: 'ready', readIds: new Set([...state.readIds, ...action.readIds]) };
     }
     case 'mark-read': return state.readIds.has(action.updateId) ? state : { ...state, readIds: new Set([...state.readIds, action.updateId]) };
@@ -43,6 +47,10 @@ function updatesReducer(state: UpdatesState, action: UpdatesAction): UpdatesStat
     }
     case 'sync-operation-updates': {
       const otherUpdates = state.updates.filter((item) => !item.id.startsWith(operationUpdatePrefix));
+      return { ...state, updates: [...action.updates, ...otherUpdates] };
+    }
+    case 'sync-admin-announcement-updates': {
+      const otherUpdates = state.updates.filter((item) => !item.id.startsWith(adminAnnouncementUpdatePrefix));
       return { ...state, updates: [...action.updates, ...otherUpdates] };
     }
     case 'replace-read-state': return { ...state, readIds: action.readIds };
@@ -60,7 +68,7 @@ async function loadUpdates(dispatch: Dispatch<UpdatesAction>) {
     const validIds = new Set(updates.map((update) => update.id));
     const restoredIds = new Set([
       ...updates.filter((update) => update.initiallyRead).map((update) => update.id),
-      ...(storedIds?.filter((id) => validIds.has(id) || id.startsWith(assessmentUpdatePrefix) || id.startsWith(trainingUpdatePrefix) || id.startsWith(operationUpdatePrefix)) ?? []),
+      ...(storedIds?.filter((id) => validIds.has(id) || isDomainUpdateId(id)) ?? []),
     ]);
     dispatch({ type: 'load-success', updates, readIds: restoredIds });
   }
@@ -97,9 +105,12 @@ export function UpdatesProvider({ children }: { children: ReactNode }) {
   const syncOperationUpdates = useCallback((updates: readonly AcademyCommunicationUpdate[]) => {
     dispatch({ type: 'sync-operation-updates', updates });
   }, []);
+  const syncAdminAnnouncementUpdates = useCallback((updates: readonly AcademyCommunicationUpdate[]) => {
+    dispatch({ type: 'sync-admin-announcement-updates', updates });
+  }, []);
   const retry = useCallback(() => { void loadUpdates(dispatch); }, []);
   const unreadCount = state.updates.reduce((count, update) => count + (state.readIds.has(update.id) ? 0 : 1), 0);
-  const value = useMemo(() => ({ updates: state.updates, status: state.status, unreadCount, isRead, markRead, markAllRead, resetReadState, syncAssessmentUpdates, syncTrainingUpdates, syncOperationUpdates, retry }), [isRead, markAllRead, markRead, resetReadState, retry, state.status, state.updates, syncAssessmentUpdates, syncOperationUpdates, syncTrainingUpdates, unreadCount]);
+  const value = useMemo(() => ({ updates: state.updates, status: state.status, unreadCount, isRead, markRead, markAllRead, resetReadState, syncAssessmentUpdates, syncTrainingUpdates, syncOperationUpdates, syncAdminAnnouncementUpdates, retry }), [isRead, markAllRead, markRead, resetReadState, retry, state.status, state.updates, syncAdminAnnouncementUpdates, syncAssessmentUpdates, syncOperationUpdates, syncTrainingUpdates, unreadCount]);
   return <UpdatesContext.Provider value={value}>{children}</UpdatesContext.Provider>;
 }
 

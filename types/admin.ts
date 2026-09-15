@@ -1,4 +1,5 @@
 import { AgeCategory } from '@/types/academy';
+import { AcademyUpdateCategory } from '@/types/updates';
 
 export type AdminRole = 'owner' | 'manager' | 'front-desk';
 export type EnrolmentStatus = 'active' | 'trial' | 'paused' | 'left';
@@ -181,6 +182,8 @@ export interface AdminAnnouncementRecord {
   readonly id: string;
   readonly title: string;
   readonly message: string;
+  /** Category the Player Updates feed files this under. Optional so saves made before it existed still load. */
+  readonly category?: AcademyUpdateCategory;
   readonly audience: AdminAnnouncementAudience;
   readonly categoryIds: readonly string[];
   readonly priority: 'normal' | 'important';
@@ -359,6 +362,7 @@ export interface AdminSalaryPaymentInput {
 export interface AdminAnnouncementInput {
   readonly title: string;
   readonly message: string;
+  readonly category: AcademyUpdateCategory;
   readonly audience: AdminAnnouncementAudience;
   readonly categoryIds: readonly string[];
   readonly priority: 'normal' | 'important';

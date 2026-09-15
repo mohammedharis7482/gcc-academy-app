@@ -14,10 +14,13 @@ import { useToast } from '@/components/states/success-toast';
 import { useAdminData } from '@/contexts/admin-data-context';
 import { adminLayout } from '@/design/tokens/admin';
 import { AdminAnnouncementAudience } from '@/types/admin';
+import { AcademyUpdateCategory } from '@/types/updates';
 
 const audiences = ['All Players', 'Selected Squads', 'Coaches Only'] as const;
 const audienceValues: Readonly<Record<(typeof audiences)[number], AdminAnnouncementAudience>> = { 'All Players': 'all-players', 'Selected Squads': 'selected-categories', 'Coaches Only': 'coaches' };
 const priorities = ['Normal', 'Important'] as const;
+const categories = ['General Notice', 'Match', 'Camp', 'Holiday', 'Schedule Change', 'Academy Event', 'Payment Reminder'] as const satisfies readonly AcademyUpdateCategory[];
+const categoryIcons: Readonly<Record<(typeof categories)[number], 'bullhorn-outline' | 'soccer' | 'tent' | 'beach' | 'calendar-clock' | 'party-popper' | 'cash-clock'>> = { 'General Notice': 'bullhorn-outline', Match: 'soccer', Camp: 'tent', Holiday: 'beach', 'Schedule Change': 'calendar-clock', 'Academy Event': 'party-popper', 'Payment Reminder': 'cash-clock' };
 
 export default function NewAdminAnnouncementRoute() {
   const router = useRouter();
@@ -30,7 +33,8 @@ export default function NewAdminAnnouncementRoute() {
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState<string>();
-  const [sheet, setSheet] = useState<'audience' | 'squads' | null>(null);
+  const [category, setCategory] = useState<(typeof categories)[number]>('General Notice');
+  const [sheet, setSheet] = useState<'audience' | 'squads' | 'category' | null>(null);
 
   const back = () => { if (router.canGoBack()) router.back(); else router.replace('/(admin)/(tabs)'); };
   const squadSummary = squadIds.length ? squadIds.map((id) => admin.getSquad(id)?.name).filter(Boolean).join(', ') : 'Select squads';
@@ -44,7 +48,7 @@ export default function NewAdminAnnouncementRoute() {
     try {
       const audience = audienceValues[audienceLabel];
       const categoryIds = audience === 'all-players' ? admin.squads.map((squad) => squad.id) : audience === 'selected-categories' ? squadIds : [];
-      const result = await admin.postAnnouncement({ title: title.trim(), message: message.trim(), audience, categoryIds, priority: priority === 'Important' ? 'important' : 'normal' });
+      const result = await admin.postAnnouncement({ title: title.trim(), message: message.trim(), category, audience, categoryIds, priority: priority === 'Important' ? 'important' : 'normal' });
       if (!result.value) { setError(result.error ?? 'Unable to publish this announcement.'); return; }
       showSuccess('Announcement published', 'The academy announcement log has been updated.');
       back();
@@ -56,8 +60,8 @@ export default function NewAdminAnnouncementRoute() {
       <SubpageHeader title="Post Announcement" subtitle="Share an academy-wide notice" onBack={back} backDisabled={admin.isSaving} />
       <View style={styles.form}>
         {error ? <InlineInfoBanner tone="error" title="Check the announcement" message={error} actionLabel="Dismiss" onAction={() => setError(undefined)} /> : null}
-        <InlineInfoBanner tone="info" title="Recorded in the Admin module" message="Announcements are stored locally for this demo and are not delivered to devices." />
-        <AppSelectRow label="Audience" value={audienceLabel} supportingText="Admins can address every academy squad" icon="account-multiple-outline" disabled={admin.isSaving} onPress={() => setSheet('audience')} />
+        <InlineInfoBanner tone="info" title="Players see this in Updates" message="Announcements for players appear in the Player Updates tab. Coaches Only announcements stay in the Admin log." />
+        <AppSelectRow label="Category" value={category} supportingText="How Player Updates files this announcement" icon={categoryIcons[category]} disabled={admin.isSaving} onPress={() => setSheet('category')} /><AppSelectRow label="Audience" value={audienceLabel} supportingText="Admins can address every academy squad" icon="account-multiple-outline" disabled={admin.isSaving} onPress={() => setSheet('audience')} />
         {audienceLabel === 'Selected Squads' ? <AppSelectRow label="Squads" value={squadSummary} icon="account-group-outline" error={error === 'Select at least one squad.'} disabled={admin.isSaving} onPress={() => setSheet('squads')} /> : null}
         <AdminField title="Priority"><AdminChoiceChips values={priorities} selected={priority} onSelect={setPriority} label="Priority" disabled={admin.isSaving} /></AdminField>
         <AdminField title="Title"><AppTextInput testID="admin-announcement-title" value={title} onChangeText={(value) => { setTitle(value.slice(0, 70)); setError(undefined); }} maxLength={70} placeholder="Short announcement title" accessibilityLabel="Announcement title" returnKeyType="next" error={error === 'Enter an announcement title.'} /></AdminField>
@@ -66,7 +70,7 @@ export default function NewAdminAnnouncementRoute() {
       </View>
     </AppScreen>
     <AppBottomSheet visible={sheet === 'audience'} title="Select audience" description="Choose who this announcement is addressed to." options={audiences.map((value) => ({ id: value, label: value, supportingText: value === 'All Players' ? 'Every academy squad' : value === 'Selected Squads' ? 'Choose specific squads' : 'Coaching staff only', icon: 'account-multiple-outline' as const }))} selectedIds={[audienceLabel]} loading={admin.isSaving} onClose={() => setSheet(null)} onSelect={(id) => { const value = audiences.find((item) => item === id); if (value) { setAudienceLabel(value); setSheet(null); setError(undefined); } }} />
-    <AppBottomSheet visible={sheet === 'squads'} multiple title="Select squads" options={admin.squads.map((squad) => ({ id: squad.id, label: squad.name, supportingText: squad.batch, icon: 'account-group-outline' as const }))} selectedIds={squadIds} loading={admin.isSaving} onClose={() => setSheet(null)} onSelect={(id) => { setSquadIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]); setError(undefined); }} />
+    <AppBottomSheet visible={sheet === 'category'} title="Announcement category" description="Players see this label on the update card." options={categories.map((value) => ({ id: value, label: value, icon: categoryIcons[value] }))} selectedIds={[category]} loading={admin.isSaving} onClose={() => setSheet(null)} onSelect={(id) => { const value = categories.find((item) => item === id); if (value) { setCategory(value); setSheet(null); } }} /><AppBottomSheet visible={sheet === 'squads'} multiple title="Select squads" options={admin.squads.map((squad) => ({ id: squad.id, label: squad.name, supportingText: squad.batch, icon: 'account-group-outline' as const }))} selectedIds={squadIds} loading={admin.isSaving} onClose={() => setSheet(null)} onSelect={(id) => { setSquadIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]); setError(undefined); }} />
   </KeyboardAvoidingView>;
 }
 

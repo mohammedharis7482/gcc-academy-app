@@ -12,7 +12,7 @@ function isPayment(value: unknown) { return isRecord(value) && hasString(value, 
 function isDecision(value: unknown) { return isRecord(value) && hasString(value, 'approvalId') && (value.state === 'approved' || value.state === 'declined') && hasString(value, 'decidedOn'); }
 function isEnrolment(value: unknown) { return isRecord(value) && hasString(value, 'id') && hasString(value, 'name') && hasString(value, 'playerId') && hasString(value, 'squadId') && typeof value.monthlyFee === 'number'; }
 function isCoach(value: unknown) { return isRecord(value) && hasString(value, 'id') && hasString(value, 'name') && hasString(value, 'roleTitle') && isStringArray(value.squadIds); }
-function isAnnouncement(value: unknown) { return isRecord(value) && hasString(value, 'id') && hasString(value, 'title') && hasString(value, 'message') && isStringArray(value.categoryIds); }
+function isAnnouncement(value: unknown) { return isRecord(value) && hasString(value, 'id') && hasString(value, 'title') && hasString(value, 'message') && isStringArray(value.categoryIds) && (value.category === undefined || typeof value.category === 'string'); }
 function isSquadOverride(value: unknown) { return isRecord(value) && hasString(value, 'squadId'); }
 function isExpense(value: unknown) { return isRecord(value) && hasString(value, 'id') && hasString(value, 'category') && typeof value.amount === 'number' && hasString(value, 'period') && hasString(value, 'paidTo') && hasString(value, 'method'); }
 function isIncome(value: unknown) { return isRecord(value) && hasString(value, 'id') && hasString(value, 'category') && typeof value.amount === 'number' && hasString(value, 'period') && hasString(value, 'receivedFrom') && hasString(value, 'method'); }

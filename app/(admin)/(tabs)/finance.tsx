@@ -56,7 +56,7 @@ export default function AdminFinanceScreen() {
       <MoneyFlowCard summary={money} onMoneyIn={() => navigateOnce(() => router.push('/(admin)/finance/money-in'))} onMoneyOut={() => navigateOnce(() => router.push('/(admin)/finance/money-out'))} />
       <View style={styles.quickGrid}>
         <AdminQuickAction testID="admin-finance-add-expense" icon="cash-minus" label="Add Expense" onPress={() => navigateOnce(() => router.push('/(admin)/finance/new-expense'))} />
-        <AdminQuickAction testID="admin-finance-salaries" icon="whistle-outline" label={pendingSalaries ? `Coach Salaries · ${pendingSalaries}` : 'Coach Salaries'} onPress={() => navigateOnce(() => router.push('/(admin)/finance/salaries'))} />
+        <AdminQuickAction testID="admin-finance-add-income" icon="cash-plus" label="Add Income" onPress={() => navigateOnce(() => router.push('/(admin)/finance/new-income'))} /><AdminQuickAction testID="admin-finance-salaries" icon="whistle-outline" label={pendingSalaries ? `Coach Salaries · ${pendingSalaries}` : 'Coach Salaries'} onPress={() => navigateOnce(() => router.push('/(admin)/finance/salaries'))} />
       </View>
       <CollectionCard summary={summary} />
       <View><SectionHeader title="Squad Collection" /><SquadCollectionReport reports={reports} /></View>

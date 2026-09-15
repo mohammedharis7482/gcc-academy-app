@@ -6,12 +6,14 @@ import { AdminFilterChips, AdminFilterLabel, AdminSearch } from '@/components/ad
 import { feeIncomeRowProps, IncomeRow, otherIncomeRowProps } from '@/components/admin/admin-finance';
 import { MetricGrid } from '@/components/admin/admin-metrics';
 import { AdminDetailSkeleton } from '@/components/admin/admin-states';
+import { AppButton } from '@/components/common/app-button';
 import { AppScreen } from '@/components/common/app-screen';
 import { ProfileSection, SubpageHeader } from '@/components/profile/profile-shared';
 import { ContentState } from '@/components/states/content-state';
 import { AdminBillingPeriod, adminDemoConfig } from '@/config/admin';
 import { useAdminData } from '@/contexts/admin-data-context';
 import { adminLayout } from '@/design/tokens/admin';
+import { useSingleNavigation } from '@/hooks/use-single-navigation';
 import { spacing } from '@/design/tokens';
 import { formatCurrency } from '@/utils/format';
 
@@ -24,6 +26,7 @@ interface MoneyInRow { readonly key: string; readonly title: string; readonly su
 export default function AdminMoneyInScreen() {
   const router = useRouter();
   const admin = useAdminData();
+  const navigateOnce = useSingleNavigation();
   const [period, setPeriod] = useState<AdminBillingPeriod>(adminDemoConfig.billing.currentPeriod);
   const [source, setSource] = useState<SourceFilter>('all');
   const [query, setQuery] = useState('');
@@ -43,7 +46,7 @@ export default function AdminMoneyInScreen() {
   if (admin.status === 'error') return <AppScreen withTabBarClearance={false}><SubpageHeader title="Money In" onBack={back} /><ContentState type="error" title="Money In unavailable" message="Academy income could not be loaded." onRetry={admin.retry} /></AppScreen>;
 
   return <AppScreen withTabBarClearance={false}>
-    <SubpageHeader title="Money In" subtitle="Player fees and other academy income" onBack={back} />
+    <SubpageHeader title="Money In" subtitle="Player fees and other academy income" onBack={back} actionLabel="Add income" actionAccessibilityLabel="Add other academy income" onAction={() => navigateOnce(() => router.push('/(admin)/finance/new-income'))} />
     <View style={styles.sections}>
       <View><AdminFilterLabel label="Period" /><AdminFilterChips options={periodOptions} selected={period} onSelect={setPeriod} label="Period" testIDPrefix="admin-money-in-period" /></View>
       <MetricGrid metrics={[
@@ -57,6 +60,7 @@ export default function AdminMoneyInScreen() {
         <View><AdminFilterLabel label="Source" /><AdminFilterChips options={sourceOptions} selected={source} onSelect={setSource} label="Source" testIDPrefix="admin-money-in-source" /></View>
       </View>
       <ProfileSection title={`Records · ${rows.length}`}>{rows.length ? <View style={styles.list}>{rows.map((row) => <IncomeRow key={row.key} title={row.title} subtitle={row.subtitle} note={row.note} amount={row.amount} date={row.date} icon={row.icon} />)}</View> : <ContentState type="empty" icon="cash-plus" title="No money in" message="No income matches the selected filters." />}</ProfileSection>
+      <AppButton testID="admin-money-in-add" label="Add Income" onPress={() => navigateOnce(() => router.push('/(admin)/finance/new-income'))} accessibilityLabel="Add other academy income" />
     </View>
   </AppScreen>;
 }

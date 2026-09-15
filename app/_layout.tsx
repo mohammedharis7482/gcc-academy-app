@@ -20,6 +20,7 @@ import { ProfileProvider, useProfile } from '@/contexts/profile-context';
 import { UpdatesProvider } from '@/contexts/updates-context';
 import { TrainingPlanProvider } from '@/contexts/training-plan-context';
 import { AcademyOperationsProvider } from '@/contexts/academy-operations-context';
+import { AdminAnnouncementsProvider } from '@/contexts/admin-announcements-context';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -29,7 +30,7 @@ export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({ Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold, Manrope_800ExtraBold });
   useEffect(() => { if (fontsLoaded || fontError) void SplashScreen.hideAsync(); }, [fontsLoaded, fontError]);
   if (!fontsLoaded && !fontError) return null;
-  return <RootErrorBoundary><ThemeProvider value={navigationTheme}><ToastProvider><AcademyDataProvider><AttendanceProvider><ProfileProvider><LearningProvider><UpdatesProvider><AcademyOperationsProvider><AssessmentProvider><TrainingPlanProvider><View style={styles.app}><OfflineBanner /><AppNavigator /></View></TrainingPlanProvider></AssessmentProvider></AcademyOperationsProvider></UpdatesProvider></LearningProvider></ProfileProvider></AttendanceProvider></AcademyDataProvider><AppStatusBar /></ToastProvider></ThemeProvider></RootErrorBoundary>;
+  return <RootErrorBoundary><ThemeProvider value={navigationTheme}><ToastProvider><AcademyDataProvider><AttendanceProvider><ProfileProvider><LearningProvider><UpdatesProvider><AdminAnnouncementsProvider><AcademyOperationsProvider><AssessmentProvider><TrainingPlanProvider><View style={styles.app}><OfflineBanner /><AppNavigator /></View></TrainingPlanProvider></AssessmentProvider></AcademyOperationsProvider></AdminAnnouncementsProvider></UpdatesProvider></LearningProvider></ProfileProvider></AttendanceProvider></AcademyDataProvider><AppStatusBar /></ToastProvider></ThemeProvider></RootErrorBoundary>;
 }
 
 function AppStatusBar() {

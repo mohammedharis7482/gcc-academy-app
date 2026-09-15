@@ -51,4 +51,5 @@ export type UpdatesAction =
   | { readonly type: 'sync-assessment-updates'; readonly updates: readonly AcademyCommunicationUpdate[] }
   | { readonly type: 'sync-training-updates'; readonly updates: readonly AcademyCommunicationUpdate[] }
   | { readonly type: 'sync-operation-updates'; readonly updates: readonly AcademyCommunicationUpdate[] }
+  | { readonly type: 'sync-admin-announcement-updates'; readonly updates: readonly AcademyCommunicationUpdate[] }
   | { readonly type: 'replace-read-state'; readonly readIds: ReadonlySet<string> };

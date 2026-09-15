@@ -68,6 +68,7 @@ app/(admin)/
   finance/money-in.tsx        Money In list (player fees plus other income)
   finance/money-out.tsx       Money Out list, filterable by category
   finance/new-expense.tsx     Add Expense form
+  finance/new-income.tsx      Add Income form
   finance/salaries.tsx        Coach salary status with a Pay action
   announcement/new.tsx        Academy announcement
   approvals.tsx               Approval queue
@@ -106,6 +107,7 @@ are added on top.
 | Local persistence | `utils/admin-storage.ts` (`samp.admin.operations`) |
 | Services | `services/admin-service.ts` |
 | State | `contexts/admin-data-context.tsx` |
+| Player feed bridge | `contexts/admin-announcements-context.tsx` (root layout) |
 | Tokens | `design/tokens/admin.ts` (`adminLayout`, `adminTabBarMetrics`) |
 
 The admin session is **not** stored here. It lives under the shared `samp.auth.session` key with the
@@ -164,6 +166,53 @@ which is why those periods show as paid; July starts unpaid so the Pay action ha
 
 Records are stamped with the scripted demo date from `config/admin.ts`, never the device clock.
 
+## Announcements reach the Player Updates feed
+
+An Admin announcement is written into the shared Player Updates feed through a fourth sync channel,
+added alongside the three that already existed in `contexts/updates-context.tsx`:
+
+| Channel | Id prefix |
+| --- | --- |
+| Coach assessments | `coach-assessment-update-` |
+| Coach training plans | `coach-training-update-` |
+| Coach operations | `coach-operation-update-` |
+| Admin announcements | `admin-announcement-update-` |
+
+Each channel replaces only the updates carrying its own prefix, so the four merge without
+overwriting one another or the seeded academy updates.
+
+### Where the bridge lives, and why
+
+`AdminAnnouncementsProvider` (`contexts/admin-announcements-context.tsx`) sits in the **root layout**,
+inside `UpdatesProvider`, not inside `(admin)`.
+
+That placement is deliberate. `AdminDataProvider` is mounted inside `app/(admin)/_layout.tsx`, which
+is unmounted whenever a player is signed in — and the player is the audience. Syncing from there
+alone would never reach them. The bridge mirrors `AcademyOperationsProvider`, which is in the root
+layout for exactly the same reason and carries Coach announcements the same way.
+
+The bridge reads `samp.admin.operations` on mount and whenever the signed-in account changes, and
+`AdminDataProvider` calls its `refresh()` after publishing, so a new announcement appears without an
+app restart. It holds no state that any Player or Coach screen consumes.
+
+### Audience targeting
+
+| Audience | Reaches |
+| --- | --- |
+| `all-players` | Every player |
+| `selected-categories` | Only players whose own category is in `categoryIds` |
+| `coaches` | Nobody in the Player feed; stays in the Admin log |
+
+The player's categories come from their `ProfileProvider` session (`categoryIds`), so a U13 player
+sees a U13-targeted announcement but not one aimed at U10 and U15.
+
+The announcement form picks an `AcademyUpdateCategory` (General Notice, Match, Camp, Holiday,
+Schedule Change, Academy Event, Payment Reminder), which is the label the Player feed files it
+under. Announcements saved before that field existed fall back to General Notice.
+
+Unread counts, individual mark-as-read, and Mark All Read work on these exactly as on any other
+update, and the read state persists under the existing `samp.updates.readState` key.
+
 ## Flows
 
 1. **Sign in** — `GCC-ADMIN-001` / `admin123` on the shared Sign In screen opens the Admin tabs; the session is restored on relaunch.
@@ -176,11 +225,13 @@ Records are stamped with the scripted demo date from `config/admin.ts`, never th
 8. **Money Out** — period selector, spend by category, search and category filter, full expense list, and Add Expense.
 9. **Add Expense** — category, amount, paid to, payment method, and note; saved against the current period.
 10. **Coach Salaries** — period selector, pending and paid totals, payment method, and a Pay action per coach that also records Money Out.
-11. **Money In** — period selector, Money In / fees / other income / Net metrics, source filter, and a combined list of collected fees and other income.
-12. **Reports** — money summary, Money Out by category, billed/collected/outstanding/capacity, squad performance, enrolment mix, and squad attendance per period.
-13. **Approvals** — pending, approved, and declined queues with a confirmation dialog on each decision.
-14. **Squads** — capacity bars, head coach reassignment, enrolment status, schedule, and roster.
-15. **Logout** — clears the shared session and returns to Sign In; Android Back cannot reopen Admin screens.
+11. **Money In** — period selector, Money In / fees / other income / Net metrics, source filter, a combined list of collected fees and other income, and Add Income.
+12. **Add Income** — category (Camp Fees, Tournament Fees, Sponsorship, Merchandise, Other), amount, received from, payment method, and note; saved against the current period.
+13. **Post Announcement** — category, audience, priority, title, and message; player-facing announcements appear in the Player Updates tab.
+14. **Reports** — money summary, Money Out by category, billed/collected/outstanding/capacity, squad performance, enrolment mix, and squad attendance per period.
+15. **Approvals** — pending, approved, and declined queues with a confirmation dialog on each decision.
+16. **Squads** — capacity bars, head coach reassignment, enrolment status, schedule, and roster.
+17. **Logout** — clears the shared session and returns to Sign In; Android Back cannot reopen Admin screens.
 
 ## Shared files this module touches
 
@@ -193,20 +244,23 @@ The Admin module is otherwise self-contained. These shared files carry the role 
 | `contexts/profile-context.tsx` | Stored-session validator accepts the `admin` role |
 | `app/_layout.tsx` | `Stack.Protected` branch for `(admin)` |
 | `app/(auth)/sign-in.tsx` | Field label reads "Academy account ID"; the `__DEV__` hint lists the admin account |
+| `types/updates.ts` | New `sync-admin-announcement-updates` action |
+| `contexts/updates-context.tsx` | Fourth prefix-keyed sync channel for Admin announcements |
+| `app/_layout.tsx` | `AdminAnnouncementsProvider` mounted inside `UpdatesProvider` |
 
-No Player or Coach screen, context, service, or dataset was modified.
+No Player or Coach screen was modified. `contexts/updates-context.tsx` gained a fourth channel
+alongside its existing three; the three are untouched and each channel is isolated by id prefix.
 
 ## Known limitations
 
-- Admin announcements are recorded in the Admin module only. They are not written into the Player
-  Updates feed, because that would require changing the shared updates context.
+- Admin announcements reach the Player Updates feed but are not delivered as push notifications;
+  there is no notification transport in this build.
 - Attendance percentages and squad training data are read-only in the Admin module; attendance is
   still owned by the Coach module.
 - Fee amounts, coach salaries, periods, and the academy timeline are fixed demo values from
   `config/admin.ts` and `data/admin.ts`.
 - Expenses and other income are always recorded against the current period; there is no back-dating,
   editing, or deleting in this build.
-- Other income is seeded but has no Add form yet; only expenses and salary payments can be created.
 - `utils/app-storage.ts`'s `clearDemoStorage` does not clear `samp.admin.operations`; the Admin
   module exposes `clearAdminStorage` for that.
 - `README.md` and `docs/DEMO_CREDENTIALS.md` still list two demo accounts and do not mention the
